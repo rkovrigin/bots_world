@@ -132,6 +132,7 @@ class Bot(object):
     def die(self):
         self._is_alife = False
         self.energy = 0
+        print "TOO OLD - DIE!"
 
     def execute_command(self, sun_rate, map):
 

@@ -46,7 +46,7 @@ class World(object):
             bots_to_remove = []
             for bot in self._bots:
                 if bot._is_alife:
-                    print bot, bot.energy, bot.current_command
+                    # print bot, bot.energy, bot.current_command
                     if i in range(0, DAYS_IN_MONTH*3):
                         ret = bot.execute_command(SUN_RATE/4, self._map)
                     elif i in range(DAYS_IN_MONTH*3, DAYS_IN_MONTH*6):
