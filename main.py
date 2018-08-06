@@ -4,12 +4,13 @@ from world import World
 
 def main():
     world = World(10, 10, 10)
-    # world.show()
+    world.show()
     world.cycle()
     # world.show()
     world.print_bots()
-    world.show()
+    world._map.print_manual()
     world._map.print_2d()
+    world.show()
 
     # for i in range(10):
     #     world.show()

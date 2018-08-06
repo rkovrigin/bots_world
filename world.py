@@ -43,6 +43,7 @@ class World(object):
     def cycle(self):
         i = 0
         while i < 150:
+            bots_to_remove = []
             for bot in self._bots:
                 if bot._is_alife:
                     print bot, bot.energy, bot.current_command
@@ -54,8 +55,17 @@ class World(object):
                         ret = bot.execute_command(SUN_RATE, self._map)
                     elif i in range(DAYS_IN_MONTH*9, DAYS_IN_MONTH*12):
                         ret = bot.execute_command(SUN_RATE/2, self._map)
+
                 if isinstance(ret, Bot):
                     self._bots.append(ret)
+
+                if bot._is_alife is False:
+                    bots_to_remove.append(bot)
+
+            for rbot in bots_to_remove:
+                self._bots.remove(rbot)
+                self._map.removeBot(rbot.x, rbot.y)
+            del bots_to_remove[:]
 
             self.print_bots()
             i += 1
@@ -63,3 +73,4 @@ class World(object):
     def print_bots(self):
         for bot in self._bots:
             print bot.energy,
+        print ''

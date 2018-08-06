@@ -24,6 +24,9 @@ class Map(object):
 
     def addBot(self, x, y):
         self._map[x][y] = BOT
+    
+    def removeBot(self, x, y):
+        self._map[x][y] = EMPTY
 
     def show(self):
         plt.imshow(self._map, cmap='Greys')
@@ -44,7 +47,7 @@ class Map(object):
     def print_manual(self):
         for i in range(self._N):
             for j in range(self._M):
-                print self._map[i][j],
+                print "%d" % self._map[i][j],
             print ''
 
     def at(self, x, y):

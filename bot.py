@@ -9,6 +9,7 @@ MOVE = 31
 EAT_ANOTHER_BOT = 63
 
 __evolution_probability__ = 4
+__life_length__ = 100
 
 MASK = 0b111111
 
@@ -20,7 +21,8 @@ class Bot(object):
     commands = []
     energy = 0
     current_command = 0
-    _is_alife = True
+    _is_alife = None
+    age = None
 
     def __init__(self, x, y, energy=10, mutate=False, copy_commands = None):
         self.x = x
@@ -28,6 +30,8 @@ class Bot(object):
         self.energy = energy
         self._size = 64
         self.commands = [0] * self.size
+        self.age = 0
+        self._is_alife = True
 
         for i in range(self._size):
             if copy_commands is None:
@@ -127,12 +131,15 @@ class Bot(object):
 
     def die(self):
         self._is_alife = False
+        self.energy = 0
 
     def execute_command(self, sun_rate, map):
 
-        if self.energy <= 0:
+        if self.energy <= 0 or self.age > 100:
             self.die()
             return
+
+        self.age += 1
 
         self.current_command = (self.current_command + 1) % self.size
         cmd = self.commands[self.current_command]
