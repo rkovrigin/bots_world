@@ -62,8 +62,10 @@ class Bot(object):
 
     def create_copy(self, map, mutate=False):
         crds = self.find_grids_around(map)
-        if self.energy > 10:
-            print ">10"
+
+        if len(crds) == 0:
+            print "NO EMPTY SPACE"
+
         if self.energy >= 100 and len(crds) > 0:
             self.energy -= 50
             crd = crds[randrange(0, len(crds))]
@@ -71,8 +73,6 @@ class Bot(object):
 
             map._map[child.x][child.y] = BOT
             return child
-            # TODO: create bot with probability of evolution is 25% and add it to the map
-            # if randrange(0, __evolution_probability__) == 0:
         return None
 
     def _check_cell(self, map, x, y):
