@@ -10,6 +10,7 @@ EAT_ANOTHER_BOT = 63
 
 __evolution_probability__ = 4
 __life_length__ = 100
+__move_cost__ = 5
 
 MASK = 0b111111
 
@@ -35,10 +36,13 @@ class Bot(object):
 
         for i in range(self._size):
             if copy_commands is None:
-                if randrange(0,2) == 0:
+                r = randrange(0,3)
+                if r == 0:
                     self.commands[i] = GET_ENERGY
-                else:
+                elif r == 1:
                     self.commands[i] = CREATE_COPY
+                elif r == 2:
+                    self.commands[i] = MOVE
             else:
                 self.commands[i] = copy_commands[i]
 
@@ -111,8 +115,21 @@ class Bot(object):
             return crds
         return []
 
-    def move(self):
-        pass
+    def move(self, map):
+        crds = self.find_grids_around(map)
+        if len(crds) <= 0 or self.energy <= __move_cost__:
+            return False
+
+        crd = crds[randrange(0, len(crds))]
+
+        map._map[self.x][self.y] = EMPTY
+        self.x = crd[0]
+        self.y = crd[1]
+        map._map[self.x][self.y] = BOT
+
+        self.energy -= __move_cost__
+
+        return False
 
     def receive_energy(self, sun_rate):
         if sun_rate > 20:
@@ -158,6 +175,6 @@ class Bot(object):
         elif cmd == LOOK_AROUND:
             self.look_around()
         elif cmd == MOVE:
-            self.move()
+            self.move(map)
         elif cmd == EAT_ANOTHER_BOT:
             self.eat_another_bot()
