@@ -1,5 +1,4 @@
 import numpy as np
-import matplotlib.pyplot as plt
 
 EMPTY = 0
 BOT = 1
@@ -29,8 +28,9 @@ class Map(object):
         self._map[x][y] = EMPTY
 
     def show(self):
-        plt.imshow(self._map, cmap='Greys')
-        plt.show()
+        pass
+        # plt.imshow(self._map, cmap='Greys')
+        # plt.show()
 
     def showBots(self, bots):
         for i in range(self._N):
@@ -42,13 +42,13 @@ class Map(object):
         self.show()
 
     def print_2d(self):
-        print self._map
+        print(self._map)
 
     def print_manual(self):
         for i in range(self._N):
             for j in range(self._M):
-                print "%d" % self._map[i][j],
-            print ''
+                print("%d" % self._map[i][j],)
+            print('')
 
     def at(self, x, y):
         return self._map[x][y]

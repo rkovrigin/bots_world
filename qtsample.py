@@ -1,5 +1,7 @@
 import random
 import sys
+from time import sleep
+
 from PyQt5.QtGui import *
 from PyQt5.QtWidgets import *
 from PyQt5.QtCore import *
@@ -16,32 +18,27 @@ class UniverseView(QGraphicsView):
         self.drawUniverse(DEFAULT_UNIV_X, DEFAULT_UNIV_Y)
 
     def drawUniverse(self, rows, columns):
-        """Draw the universe grid.
-        """
+        """Draw the universe grid."""
         self.scene.setSceneRect(QRectF(0, 0, rows*SCALE, columns*SCALE))
 
         # draw vertical lines
         for x in range(rows):
-            self.scene.addLine(x*SCALE, 0, x*SCALE, columns, QPen(Qt.black))
+            self.scene.addLine(x*SCALE, 0, x*SCALE, columns*SCALE, QPen(Qt.black))
 
         # draw horrizontal lines
         for y in range(columns):
-            self.scene.addLine(0, y*SCALE, rows, y*SCALE, QPen(Qt.black))
+            self.scene.addLine(0, y*SCALE, rows*SCALE, y*SCALE, QPen(Qt.black))
 
     def drawCellAt(self, x, y):
-        """Fill the cell at grid location (x, y)
-        """
+        """Fill the cell at grid location (x, y)"""
         item = QGraphicsRectItem(x*SCALE, y*SCALE, SCALE, SCALE)
         item.setBrush(QBrush(Qt.black))
         self.scene.addItem(item)
 
     def clearScene(self):
-        """Clear the scene.
-        """
-        # self.scene.clear()
+        self.scene.clear()
 
     def random_scene(self):
-        self.clearScene()
         for i in range(DEFAULT_UNIV_X):
             for j in range(DEFAULT_UNIV_Y):
                 if not random.randrange(100) %2:
@@ -64,6 +61,7 @@ class GameOfLifeApp(QDialog):
 
         self.patternBox = QComboBox()
         self.universeView.random_scene()
+        # self.universeView.drawUniverse(DEFAULT_UNIV_X, DEFAULT_UNIV_Y)
         self.setLayout(layout)
 
         self.setWindowTitle('Bots')
@@ -72,5 +70,3 @@ app = QApplication(sys.argv)
 gol = GameOfLifeApp()
 gol.show()
 app.exec_()
-
-print("hello")

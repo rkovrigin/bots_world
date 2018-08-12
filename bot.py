@@ -62,8 +62,6 @@ class Bot(object):
 
     def create_copy(self, map, mutate=False):
         crds = self.find_grids_around(map)
-        if self.energy > 10:
-            print ">10"
         if self.energy >= 100 and len(crds) > 0:
             self.energy -= 50
             crd = crds[randrange(0, len(crds))]
@@ -132,7 +130,7 @@ class Bot(object):
     def die(self):
         self._is_alife = False
         self.energy = 0
-        print "TOO OLD - DIE!"
+        # print("TOO OLD - DIE!")
 
     def execute_command(self, sun_rate, map):
 
