@@ -32,13 +32,17 @@ class Bot(object):
         self.commands = [0] * self.size
         self.age = 0
         self._is_alife = True
+        self.move_cost = 2
 
         for i in range(self._size):
             if copy_commands is None:
                 if randrange(0,2) == 0:
                     self.commands[i] = GET_ENERGY
                 else:
-                    self.commands[i] = CREATE_COPY
+                    if randrange(0, 2) == 0:
+                        self.commands[i] = CREATE_COPY
+                    else:
+                        self.commands[i] = MOVE
             else:
                 self.commands[i] = copy_commands[i]
 
@@ -62,8 +66,8 @@ class Bot(object):
 
     def create_copy(self, map, mutate=False):
         crds = self.find_grids_around(map)
-        if self.energy >= 100 and len(crds) > 0:
-            self.energy -= 50
+        if self.energy >= 70 and len(crds) > 0:
+            self.energy -= 30
             crd = crds[randrange(0, len(crds))]
             child = Bot(crd[0], crd[1], 10, mutate)
 
@@ -109,8 +113,22 @@ class Bot(object):
             return crds
         return []
 
-    def move(self):
-        pass
+    def move(self, map):
+        paths = self.find_grids_around(map)
+        if self.energy <= self.move_cost or len(paths) <= 0:
+            return
+
+        loc = paths[randrange(len(paths))]
+        _x = loc[0]
+        _y = loc[1]
+
+        map._map[self.x][self.y] = EMPTY
+        map._map[_x][_y] = BOT
+        self.x = _x
+        self.y = _y
+
+        self.energy -= self.move_cost
+
 
     def receive_energy(self, sun_rate):
         if sun_rate > 20:
@@ -156,6 +174,6 @@ class Bot(object):
         elif cmd == LOOK_AROUND:
             self.look_around()
         elif cmd == MOVE:
-            self.move()
+            self.move(map)
         elif cmd == EAT_ANOTHER_BOT:
             self.eat_another_bot()

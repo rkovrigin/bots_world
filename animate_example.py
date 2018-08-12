@@ -8,7 +8,7 @@ from map import BOT, EMPTY
 
 DEFAULT_UNIV_X = 80
 DEFAULT_UNIV_Y = 50
-SCALE = 4
+SCALE = 10
 
 
 class UniverseView(QGraphicsView):
