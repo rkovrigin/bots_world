@@ -61,8 +61,6 @@ class Qwidget(QWidget):
     def initUI(self):
         self.setWindowTitle(self.tr("Game of Life"))
         self.setLayout(QVBoxLayout())
-        # self.layout().setSpacing(0)
-        # self.layout().setContentsMargins(0, 0, 0, 0)
 
         self.comboBox = QComboBox()
         self.comboBox.currentTextChanged.connect(self.select)
@@ -82,16 +80,9 @@ class Qwidget(QWidget):
         self.timer.start()
 
     def tick(self):
-        # self.game.tick()
         self.view.clearScene()
-        # self.view.random_scene()
         self.world.cycle()
         self.view.set_scene(self.world._map)
-        # bitmap = self.game.visualize()
-        # image = QImage(bitmap.data, bitmap.shape[1], bitmap.shape[0], QImage.Format_Grayscale8)
-        # self.scene.removeItem(self.item)
-        # pixmap = QPixmap.fromImage(image)
-        # self.item = self.scene.addPixmap(pixmap)
 
 app = QApplication(sys.argv)
 # gol = GameOfLifeApp()
