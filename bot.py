@@ -113,7 +113,7 @@ class Bot(object):
             return crds
         return []
 
-    def move(self, map):
+    def move(self, map):  #TODO: Randomly choose direction and move there if it is empty
         paths = self.find_grids_around(map)
         if self.energy <= self.move_cost or len(paths) <= 0:
             return
@@ -142,7 +142,7 @@ class Bot(object):
     def look_around(self):
         pass
 
-    def eat_another_bot(self):
+    def eat_another_bot(self): #TODO: Randomly choose the direction, if there is a vegan there - eat it. Set energy boundary for attacking
         pass
         # print("I'm PREDATOR")
 
