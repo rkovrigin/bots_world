@@ -13,6 +13,18 @@ __life_length__ = 100
 
 MASK = 0b111111
 
+def get_cells_around(x, y):
+    crds = []
+    crds.append((x - 1, y - 1))
+    crds.append((x + 1, y + 1))
+    crds.append((x + 1, y - 1))
+    crds.append((x - 1, y + 1))
+    crds.append((x - 1, y))
+    crds.append((x + 1, y))
+    crds.append((x, y - 1))
+    crds.append((x, y + 1))
+    return crds
+
 
 class Bot(object):
     x = 0
@@ -37,7 +49,7 @@ class Bot(object):
         self._max_age = randrange(40, 70)
         self._predator = predator
 
-        if copy_commands is None:
+        if copy_commands is None:  #TODO: add random numbers
             for i in range(self._size):
                 if randrange(0,2) == 0:
                     self.commands[i] = GET_ENERGY
@@ -54,6 +66,9 @@ class Bot(object):
 
         if mutate:
             self._mutate()
+
+    def _next_command_pointer(self):
+        return (self.current_command + 1) % self.size
 
     @property
     def size(self):
@@ -77,17 +92,17 @@ class Bot(object):
             # if randrange(0, __evolution_probability__) == 0:
         return None
 
-    def _check_cell(self, map, x, y):
+    def _check_cell(self, map, x, y, look_for=EMPTY):
         crd = {'x': None, 'y': None}
-        try:
-            if map.at(x, y) == EMPTY:
-                crd['x'] = self.x
-                crd['y'] = self.y
-                return crd
-            else:
-                return None
-        except:
+        if x < 0 or y < 0:
             return None
+        if x >= map._N or y >= map._M:
+            return None
+
+        if map.at(x, y) == look_for:
+            crd['x'] = x
+            crd['y'] = y
+            return crd
 
     def find_grids_around(self, map):
         crds = []
@@ -113,14 +128,15 @@ class Bot(object):
             return crds
         return []
 
-    def move(self, map):  #TODO: Randomly choose direction and move there if it is empty
+    def move_random_direction(self, map):
         paths = self.find_grids_around(map)
+
         if self.energy <= self.move_cost or len(paths) <= 0:
             return
 
         loc = paths[randrange(len(paths))]
-        _x = loc[0]
-        _y = loc[1]
+        _x = loc['x']
+        _y = loc['y']
 
         map._map[self.x][self.y] = EMPTY
         map._map[_x][_y] = BOT
@@ -129,6 +145,30 @@ class Bot(object):
 
         self.energy -= self.move_cost
 
+    def _find_direction_cell(self, map, look_for=EMPTY):
+        next_cp = self._next_command_pointer()
+        spin = self.commands[next_cp] % 8
+        coords = get_cells_around(self.x, self.y)
+        new_coord = coords[spin]
+        loc = self._check_cell(map, new_coord[0], new_coord[1], look_for)
+        return loc
+
+    def move_with_spin(self, map):
+        loc = self._find_direction_cell(map)
+
+        if self.energy <= self.move_cost or loc is None:
+            return
+
+        # loc = paths[randrange(len(paths))]
+        _x = loc['x']
+        _y = loc['y']
+
+        map._map[self.x][self.y] = EMPTY
+        map._map[_x][_y] = BOT
+        self.x = _x
+        self.y = _y
+
+        self.energy -= self.move_cost
 
     def receive_energy(self, sun_rate):
         if sun_rate > 20:
@@ -142,15 +182,34 @@ class Bot(object):
     def look_around(self):
         pass
 
-    def eat_another_bot(self): #TODO: Randomly choose the direction, if there is a vegan there - eat it. Set energy boundary for attacking
-        pass
-        # print("I'm PREDATOR")
+    def eat_another_bot(self, map, bots): #TODO: Randomly choose the direction, if there is a vegan there - eat it. Set energy boundary for attacking
+        cell = self._find_direction_cell(map, BOT)
+        victim = None
+
+        if cell is None:
+            return
+
+        for v in bots:
+            if cell['x'] == v.x and cell['y'] == v.y:
+                victim = v
+                break
+
+        if victim._predator == True:
+            return
+
+        if self.energy <= 40 and self.energy <= victim.energy:
+            return
+
+        self.energy += victim.energy
+        victim.die()
+
+        return victim
 
     def die(self):
         self._is_alife = False
         self.energy = 0
 
-    def execute_command(self, sun_rate, map):
+    def execute_command(self, sun_rate, map, bots):
 
         if self.energy <= 0 or self.age >= self._max_age:
             self.die()
@@ -159,7 +218,7 @@ class Bot(object):
         # self._max_age -= 1
         self.age += 1
 
-        self.current_command = (self.current_command + 1) % self.size
+        self.current_command = self._next_command_pointer()
         cmd = self.commands[self.current_command]
 
         if cmd == GET_ENERGY:
@@ -175,9 +234,10 @@ class Bot(object):
         elif cmd == LOOK_AROUND:
             self.look_around()
         elif cmd == MOVE:
-            self.move(map)
+            self.move_with_spin(map)
         elif cmd == EAT_ANOTHER_BOT:
-            self.eat_another_bot()
+            victim = self.eat_another_bot(map, bots)
+            return victim
         else:
             self.current_command = cmd
 

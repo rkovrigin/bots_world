@@ -10,6 +10,7 @@ DAYS_IN_MONTH = 30
 MONTHS = 12
 
 _DATE_ = 0
+_CYCLE_ = 0
 
 class World(object):
     _bots = None
@@ -43,19 +44,22 @@ class World(object):
 
     def cycle(self):
         global _DATE_
+        global _CYCLE_
         bots_to_remove = []
         for bot in self._bots:
             ret = None
             if bot._is_alife:
-                # print bot, bot.energy, bot.current_command
+                sun_rate = 0
                 if _DATE_ in range(0, DAYS_IN_MONTH*3):
-                    ret = bot.execute_command(SUN_RATE/4, self._map)
+                    sun_rate = SUN_RATE / 4
                 elif _DATE_ in range(DAYS_IN_MONTH*3, DAYS_IN_MONTH*6):
-                    ret = bot.execute_command(SUN_RATE/2, self._map)
+                    sun_rate = SUN_RATE / 2
                 elif _DATE_ in range(DAYS_IN_MONTH*6, DAYS_IN_MONTH*9):
-                    ret = bot.execute_command(SUN_RATE, self._map)
+                    sun_rate = SUN_RATE
                 elif _DATE_ in range(DAYS_IN_MONTH*9, DAYS_IN_MONTH*12):
-                    ret = bot.execute_command(SUN_RATE/2, self._map)
+                    sun_rate = SUN_RATE / 2
+
+                ret = bot.execute_command(sun_rate, self._map, self._bots)
 
             if isinstance(ret, Bot):
                 self._bots.append(ret)
@@ -69,7 +73,8 @@ class World(object):
         bots_to_remove.clear()
 
         _DATE_ = (_DATE_ + 1) % (DAYS_IN_MONTH * MONTHS)
-        print("Day: %d; Population: %d" % (_DATE_, len(self._bots)))
+        _CYCLE_ += 1
+        print("Cycle: %d; Day: %d; Population: %d" % (_CYCLE_, _DATE_, len(self._bots)))
         self.print_bots()
 
     def print_bots(self):
