@@ -60,6 +60,27 @@ class UniverseView(QGraphicsView):
 
         self.drawUniverse(DEFAULT_UNIV_X, DEFAULT_UNIV_Y)
 
+    def set_scene_energy(self, bots):
+        for bot in bots:
+            energy = bot.energy
+            color = Qt.gray
+            if energy < 10:
+                color = Qt.lightGray
+            elif energy < 30:
+                color = Qt.yellow
+            elif energy < 50:
+                color = Qt.yellow
+            elif energy < 100:
+                color = Qt.red
+            elif energy < 200:
+                color = Qt.darkRed
+            elif energy < 500:
+                color = Qt.magenta
+            else:
+                color = Qt.black
+            self.drawCellAt(bot.x, bot.y, color)
+
+
 class Qwidget(QWidget):
 
     def __init__(self):
@@ -95,7 +116,8 @@ class Qwidget(QWidget):
         self.view.clearScene()
         self.world.cycle()
         # self.view.set_scene(self.world._map)
-        self.view.set_scene_bots(self.world._bots)
+        # self.view.set_scene_bots(self.world._bots)
+        self.view.set_scene_energy(self.world._bots)
 
 app = QApplication(sys.argv)
 # gol = GameOfLifeApp()
