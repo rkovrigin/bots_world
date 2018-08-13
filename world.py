@@ -68,7 +68,7 @@ class World(object):
             self._map.removeBot(rbot.x, rbot.y)
         bots_to_remove.clear()
 
-        _DATE_ += 1
+        _DATE_ = (_DATE_ + 1) % (DAYS_IN_MONTH * MONTHS)
         print("Day: %d; Population: %d" % (_DATE_, len(self._bots)))
         self.print_bots()
 
