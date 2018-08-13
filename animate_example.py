@@ -6,9 +6,9 @@ import sys
 from world import World
 from map import BOT, EMPTY
 
-DEFAULT_UNIV_X = 80
-DEFAULT_UNIV_Y = 50
-SCALE = 10
+DEFAULT_UNIV_X = 100
+DEFAULT_UNIV_Y = 60
+SCALE = 8
 
 
 class UniverseView(QGraphicsView):
@@ -27,9 +27,13 @@ class UniverseView(QGraphicsView):
         for y in range(columns):
             self.scene.addLine(0, y*SCALE, rows*SCALE, y*SCALE, QPen(Qt.black))
 
-    def drawCellAt(self, x, y):
+    def drawCellAt(self, x, y, color=Qt.black):
+        # if random.randrange(2) == 0:
+        #     color = Qt.black
+        # else:
+        #     color = Qt.red
         item = QGraphicsRectItem(x*SCALE, y*SCALE, SCALE, SCALE)
-        item.setBrush(QBrush(Qt.black))
+        item.setBrush(QBrush(color))
         self.scene.addItem(item)
 
     def clearScene(self):
@@ -47,6 +51,14 @@ class UniverseView(QGraphicsView):
                 if map.at(x,y) == BOT:
                     self.drawCellAt(x, y)
 
+    def set_scene_bots(self, bots):
+        for bot in bots:
+            if bot.age < 15:
+                self.drawCellAt(bot.x, bot.y, Qt.green)
+            elif bot._max_age - bot.age <= 20:
+                self.drawCellAt(bot.x, bot.y, Qt.gray)
+            else:
+                self.drawCellAt(bot.x, bot.y)
 
 class Qwidget(QWidget):
 
@@ -82,7 +94,8 @@ class Qwidget(QWidget):
     def tick(self):
         self.view.clearScene()
         self.world.cycle()
-        self.view.set_scene(self.world._map)
+        # self.view.set_scene(self.world._map)
+        self.view.set_scene_bots(self.world._bots)
 
 app = QApplication(sys.argv)
 # gol = GameOfLifeApp()

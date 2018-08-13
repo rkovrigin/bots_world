@@ -33,9 +33,11 @@ class Bot(object):
         self.age = 0
         self._is_alife = True
         self.move_cost = 2
+        self.current_command = 0
+        self._max_age = randrange(50, 110)
 
-        for i in range(self._size):
-            if copy_commands is None:
+        if copy_commands is None:
+            for i in range(self._size):
                 if randrange(0,2) == 0:
                     self.commands[i] = GET_ENERGY
                 else:
@@ -43,17 +45,14 @@ class Bot(object):
                         self.commands[i] = CREATE_COPY
                     else:
                         self.commands[i] = MOVE
-            else:
-                self.commands[i] = copy_commands[i]
+        else:
+            self.commands = copy_commands[:]
 
         self.current_command = 0
         self._is_alife = True
 
         if mutate:
-            command = randrange(0, self.size)
-            cmd_nmb = self.commands[command]
-            new_cmd_nmb = self._invert_bit(cmd_nmb, randrange(0, 6))
-            self.commands[command] = new_cmd_nmb
+            self._mutate()
 
     @property
     def size(self):
@@ -148,14 +147,14 @@ class Bot(object):
     def die(self):
         self._is_alife = False
         self.energy = 0
-        # print("TOO OLD - DIE!")
 
     def execute_command(self, sun_rate, map):
 
-        if self.energy <= 0 or self.age > 100:
+        if self.energy <= 0 or self.age >= self._max_age:
             self.die()
             return
 
+        # self._max_age -= 1
         self.age += 1
 
         self.current_command = (self.current_command + 1) % self.size
@@ -177,3 +176,12 @@ class Bot(object):
             self.move(map)
         elif cmd == EAT_ANOTHER_BOT:
             self.eat_another_bot()
+        else:
+            self.current_command = cmd
+
+    def _mutate(self):
+        rand_nmb = randrange(0, self.size)
+        cmd = self.commands[rand_nmb]
+        new_cmd_nmb = self._invert_bit(cmd, randrange(0, 6))
+        self.commands[rand_nmb] = new_cmd_nmb
+
