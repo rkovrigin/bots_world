@@ -49,7 +49,9 @@ class UniverseView(QGraphicsView):
 
     def set_scene_bots(self, bots):
         for bot in bots:
-            if bot.age < 15:
+            if bot._predator is True:
+                self.drawCellAt(bot.x, bot.y, Qt.red)
+            elif bot.age < 15:
                 self.drawCellAt(bot.x, bot.y, Qt.green)
             elif bot._max_age - bot.age <= 20:
                 self.drawCellAt(bot.x, bot.y, Qt.gray)

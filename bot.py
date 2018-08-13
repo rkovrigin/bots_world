@@ -24,7 +24,7 @@ class Bot(object):
     _is_alife = None
     age = None
 
-    def __init__(self, x, y, energy=10, mutate=False, copy_commands = None):
+    def __init__(self, x, y, energy=10, mutate=False, copy_commands=None, predator=False):
         self.x = x
         self.y = y
         self.energy = energy
@@ -35,6 +35,7 @@ class Bot(object):
         self.move_cost = 2
         self.current_command = 0
         self._max_age = randrange(40, 70)
+        self._predator = predator
 
         if copy_commands is None:
             for i in range(self._size):
@@ -68,7 +69,7 @@ class Bot(object):
         if self.energy >= 70 and len(crds) > 0:
             self.energy -= 30
             crd = crds[randrange(0, len(crds))]
-            child = Bot(crd[0], crd[1], 10, mutate)
+            child = Bot(crd[0], crd[1], energy=10, mutate=mutate, copy_commands=self.commands, predator=self._predator)
 
             map._map[child.x][child.y] = BOT
             return child
@@ -143,6 +144,7 @@ class Bot(object):
 
     def eat_another_bot(self):
         pass
+        # print("I'm PREDATOR")
 
     def die(self):
         self._is_alife = False
@@ -184,4 +186,7 @@ class Bot(object):
         cmd = self.commands[rand_nmb]
         new_cmd_nmb = self._invert_bit(cmd, randrange(0, 6))
         self.commands[rand_nmb] = new_cmd_nmb
+        for i in self.commands:
+            if self.commands[i] == EAT_ANOTHER_BOT:
+                self._predator = True
 
