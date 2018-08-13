@@ -66,9 +66,10 @@ class World(object):
         for rbot in bots_to_remove:
             self._bots.remove(rbot)
             self._map.removeBot(rbot.x, rbot.y)
-        del bots_to_remove[:]
+        bots_to_remove.clear()
 
         _DATE_ += 1
+        print("Day: %d; Population: %d" % (_DATE_, len(self._bots)))
         self.print_bots()
 
     def print_bots(self):

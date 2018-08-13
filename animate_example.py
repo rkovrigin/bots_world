@@ -28,10 +28,6 @@ class UniverseView(QGraphicsView):
             self.scene.addLine(0, y*SCALE, rows*SCALE, y*SCALE, QPen(Qt.black))
 
     def drawCellAt(self, x, y, color=Qt.black):
-        # if random.randrange(2) == 0:
-        #     color = Qt.black
-        # else:
-        #     color = Qt.red
         item = QGraphicsRectItem(x*SCALE, y*SCALE, SCALE, SCALE)
         item.setBrush(QBrush(color))
         self.scene.addItem(item)
@@ -59,6 +55,8 @@ class UniverseView(QGraphicsView):
                 self.drawCellAt(bot.x, bot.y, Qt.gray)
             else:
                 self.drawCellAt(bot.x, bot.y)
+
+        self.drawUniverse(DEFAULT_UNIV_X, DEFAULT_UNIV_Y)
 
 class Qwidget(QWidget):
 

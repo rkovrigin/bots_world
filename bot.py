@@ -34,7 +34,7 @@ class Bot(object):
         self._is_alife = True
         self.move_cost = 2
         self.current_command = 0
-        self._max_age = randrange(50, 110)
+        self._max_age = randrange(40, 70)
 
         if copy_commands is None:
             for i in range(self._size):
