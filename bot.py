@@ -172,7 +172,8 @@ class Bot(object):
 
     def receive_energy(self, sun_rate):
         if sun_rate > 20:
-            self.die()
+            self.die("SUN RATE REASON")
+            return self
         else:
             self.energy += sun_rate
 
@@ -201,19 +202,24 @@ class Bot(object):
             return
 
         self.energy += victim.energy
-        victim.die()
+        victim.die("EATEN BY PREDATOR REASON")
 
         return victim
 
-    def die(self):
+    def die(self, reason):
         self._is_alife = False
         self.energy = 0
+        # print(reason)
 
     def execute_command(self, sun_rate, map, bots):
 
-        if self.energy <= 0 or self.age >= self._max_age:
-            self.die()
-            return
+        if self.energy <= 0:
+            self.die("ENERGY = 0 RESON")
+            return self
+
+        if self.age >= self._max_age:
+            self.die("AGE REASON")
+            return self
 
         # self._max_age -= 1
         self.age += 1
