@@ -58,7 +58,7 @@ class UniverseView(QGraphicsView):
             else:
                 self.drawCellAt(bot.x, bot.y)
 
-        self.drawUniverse(DEFAULT_UNIV_X, DEFAULT_UNIV_Y)
+        # self.drawUniverse(DEFAULT_UNIV_X, DEFAULT_UNIV_Y)
 
     def set_scene_energy(self, bots):
         for bot in bots:

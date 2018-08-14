@@ -25,17 +25,8 @@ def get_cells_around(x, y): # TODO: Don't need to get every cell, need only to c
     crds.append((x, y + 1))
     return crds
 
-
+#TODO: Implement sharing of energy with kind. Same kind - similar except 1 bit or 1 command
 class Bot(object):
-    x = 0
-    y = 0
-    _size = 0
-    commands = []
-    energy = 0
-    current_command = 0
-    _is_alife = None
-    age = None
-
     def __init__(self, x, y, energy=10, mutate=False, copy_commands=None, predator=False):
         self.x = x
         self.y = y
@@ -44,10 +35,14 @@ class Bot(object):
         self.commands = [0] * self.size
         self.age = 0
         self._is_alife = True
-        self.move_cost = 2
+        self.move_cost = randrange(1, 5)
         self.current_command = 0
         self._max_age = randrange(40, 70)
         self._predator = predator
+        if self._predator:
+            self.sun_rate = 0
+        else:
+            self.sun_rate = randrange(5, 11) / 10.0
 
         if copy_commands is None:  #TODO: add random numbers
             for i in range(self._size):
@@ -178,7 +173,7 @@ class Bot(object):
             self.die("SUN RATE REASON")
             return self
         else:
-            self.energy += sun_rate
+            self.energy += sun_rate * self.sun_rate
 
     def eat_meneral(self):
         pass
