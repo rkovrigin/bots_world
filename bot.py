@@ -13,7 +13,7 @@ __life_length__ = 100
 
 MASK = 0b111111
 
-def get_cells_around(x, y):
+def get_cells_around(x, y): # TODO: Don't need to get every cell, need only to check one depending on spin
     crds = []
     crds.append((x - 1, y - 1))
     crds.append((x + 1, y + 1))
