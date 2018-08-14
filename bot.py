@@ -42,7 +42,7 @@ class Bot(object):
         if self._predator:
             self.sun_rate = 0
         else:
-            self.sun_rate = randrange(5, 11) / 10.0
+            self.sun_rate = randrange(9, 11) / 10.0
 
         if copy_commands is None:  #TODO: add random numbers
             for i in range(self._size):
@@ -84,7 +84,11 @@ class Bot(object):
             crd = crds[randrange(0, len(crds))]
             child = Bot(crd[0], crd[1], energy=10, mutate=mutate, copy_commands=self.commands, predator=self._predator)
             map._map[child.x][child.y] = BOT
-            child.sun_rate = self.sun_rate + (randrange(1, 11) / 100.0) - (randrange(1, 11) / 100.0)
+            if self._predator:
+                child._predator = True
+                child.sun_rate = 0
+            else:
+                child.sun_rate = self.sun_rate + (randrange(1, 11) / 100.0) - (randrange(1, 11) / 100.0)
             return child
             # TODO: create bot with probability of evolution is 25% and add it to the map
             # if randrange(0, __evolution_probability__) == 0:
