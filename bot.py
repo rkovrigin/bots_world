@@ -183,7 +183,7 @@ class Bot(object):
     def look_around(self):
         pass
 
-    def eat_another_bot(self, map, bots): #TODO: Randomly choose the direction, if there is a vegan there - eat it. Set energy boundary for attacking
+    def eat_another_bot(self, map, bots): #TODO: takes 73% of time, save bots in map
         cell = self._find_direction_cell(map, BOT)
         victim = None
 

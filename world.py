@@ -2,6 +2,8 @@ from random import randrange
 from map import Map
 from bot import Bot
 
+#  TODO: create map as a tor, bots from the right side appear on the left side and vice versa
+
 M = 100
 N = 100
 X = 200
