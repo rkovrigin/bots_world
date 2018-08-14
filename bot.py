@@ -51,8 +51,11 @@ class Bot(object):
 
         if copy_commands is None:  #TODO: add random numbers
             for i in range(self._size):
-                if randrange(0,2) == 0:
+                r = randrange(0,3)
+                if r == 0:
                     self.commands[i] = GET_ENERGY
+                elif r == 1:
+                    self.commands[i] = randrange(0, 64)
                 else:
                     if randrange(0, 2) == 0:
                         self.commands[i] = CREATE_COPY

@@ -116,8 +116,8 @@ class Qwidget(QWidget):
         self.view.clearScene()
         self.world.cycle()
         # self.view.set_scene(self.world._map)
-        # self.view.set_scene_bots(self.world._bots)
-        self.view.set_scene_energy(self.world._bots)
+        self.view.set_scene_bots(self.world._bots)
+        # self.view.set_scene_energy(self.world._bots)
 
 app = QApplication(sys.argv)
 # gol = GameOfLifeApp()
