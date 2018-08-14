@@ -83,8 +83,8 @@ class Bot(object):
             self.energy -= 30
             crd = crds[randrange(0, len(crds))]
             child = Bot(crd[0], crd[1], energy=10, mutate=mutate, copy_commands=self.commands, predator=self._predator)
-
             map._map[child.x][child.y] = BOT
+            child.sun_rate = self.sun_rate + (randrange(1, 11) / 100.0) - (randrange(1, 11) / 100.0)
             return child
             # TODO: create bot with probability of evolution is 25% and add it to the map
             # if randrange(0, __evolution_probability__) == 0:
