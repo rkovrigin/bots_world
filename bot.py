@@ -248,6 +248,7 @@ class Bot(object):
             return victim
         else:
             self.current_command = cmd
+            #TODO: spend energy even if did nothing
 
     def _mutate(self):
         rand_nmb = randrange(0, self.size)
