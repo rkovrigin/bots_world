@@ -6,10 +6,10 @@ import sys
 from world import World
 from map import BOT, EMPTY
 
-DEFAULT_UNIV_X = 50
-DEFAULT_UNIV_Y = 50
-BOTS_AT_BEGINNING=60
-SCALE = 15
+DEFAULT_UNIV_X = 100
+DEFAULT_UNIV_Y = 100
+BOTS_AT_BEGINNING = 10
+SCALE = 6
 
 
 class UniverseView(QGraphicsView):

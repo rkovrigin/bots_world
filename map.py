@@ -6,15 +6,14 @@ BOT_VEGAN = 2
 BOT_PREDATOR = 3
 BOTS = [BOT, BOT_VEGAN, BOT_PREDATOR]
 
+
 class Map(object):
-    _N = None
-    _M = None
-    _map = None
-    _plt = None
+    __slots__ = ["_N", "_M", "_map", "_plt"]
 
     def __init__(self, n, m):
         self._N = n
         self._M = m
+        self._map = [0] * self._M
         self._map = np.zeros((self._N, self._M))
 
     def is_empty(self, x, y):
@@ -23,7 +22,7 @@ class Map(object):
 
     def addBot(self, x, y):
         self._map[x][y] = BOT
-    
+
     def removeBot(self, x, y):
         self._map[x][y] = EMPTY
 
@@ -47,7 +46,7 @@ class Map(object):
     def print_manual(self):
         for i in range(self._N):
             for j in range(self._M):
-                print("%d" % self._map[i][j],)
+                print("%d" % self._map[i][j], )
             print('')
 
     def at(self, x, y):

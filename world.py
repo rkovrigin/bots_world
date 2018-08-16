@@ -27,8 +27,10 @@ class World(object):
         self._B = b
         self._map = Map(n, m)
         self._bots = []
+        self._set_bots_randomly(self._B)
 
-        for i in range(self._B):
+    def _set_bots_randomly(self, b):
+        for i in range(b):
             x = randrange(0, self._map._N)
             y = randrange(0, self._map._M)
             if self._map.is_empty(x, y):
@@ -48,6 +50,10 @@ class World(object):
         global _DATE_
         global _CYCLE_
         bots_to_remove = []
+
+        if len(self._bots) == 0:
+            self._set_bots_randomly(self._B)
+
         for bot in self._bots:
             ret = None
             if bot._is_alife:

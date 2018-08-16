@@ -13,22 +13,8 @@ __life_length__ = 100
 
 MASK = 0b111111
 
-
-
-
-def get_cells_around(x, y):  # TODO: Don't need to get every cell, need only to check one depending on spin
-    crds = []
-    crds.append((x - 1, y - 1))
-    crds.append((x + 1, y + 1))
-    crds.append((x + 1, y - 1))
-    crds.append((x - 1, y + 1))
-    crds.append((x - 1, y))
-    crds.append((x + 1, y))
-    crds.append((x, y - 1))
-    crds.append((x, y + 1))
-    return crds
-
 get_cells_around_list = ((-1, -1), (1, 1), (1, -1), (-1, 1), (-1, 0), (1, 0), (0, -1), (0, 1))
+
 
 # TODO: Implement sharing of energy with kind. Same kind - similar except 1 bit or 1 command
 class Bot(object):
