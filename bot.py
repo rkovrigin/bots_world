@@ -1,4 +1,4 @@
-from random import randrange
+from random import randrange, randint
 from map import EMPTY, BOT
 
 EAT_MINERAL = 10
@@ -13,7 +13,10 @@ __life_length__ = 100
 
 MASK = 0b111111
 
-def get_cells_around(x, y): # TODO: Don't need to get every cell, need only to check one depending on spin
+
+
+
+def get_cells_around(x, y):  # TODO: Don't need to get every cell, need only to check one depending on spin
     crds = []
     crds.append((x - 1, y - 1))
     crds.append((x + 1, y + 1))
@@ -25,8 +28,11 @@ def get_cells_around(x, y): # TODO: Don't need to get every cell, need only to c
     crds.append((x, y + 1))
     return crds
 
-#TODO: Implement sharing of energy with kind. Same kind - similar except 1 bit or 1 command
+get_cells_around_list = ((-1, -1), (1, 1), (1, -1), (-1, 1), (-1, 0), (1, 0), (0, -1), (0, 1))
+
+# TODO: Implement sharing of energy with kind. Same kind - similar except 1 bit or 1 command
 class Bot(object):
+    __slots__ = ["x", "y", "energy", "_size", "commands", "age", "_is_alife", "move_cost", "current_command", "_max_age", "_predator", "sun_rate"]
     def __init__(self, x, y, energy=10, mutate=False, copy_commands=None, predator=False):
         self.x = x
         self.y = y
@@ -44,9 +50,9 @@ class Bot(object):
         else:
             self.sun_rate = randrange(9, 11) / 10.0
 
-        if copy_commands is None:  #TODO: add random numbers
+        if copy_commands is None:  # TODO: add random numbers
             for i in range(self._size):
-                r = randrange(0,3)
+                r = randrange(0, 3)
                 if r == 0:
                     self.commands[i] = GET_ENERGY
                 elif r == 1:
@@ -149,10 +155,13 @@ class Bot(object):
 
     def _find_direction_cell(self, map, look_for=EMPTY):
         next_cp = self._next_command_pointer()
+
+        #coords = get_cells_around(self.x, self.y)
         spin = self.commands[next_cp] % 8
-        coords = get_cells_around(self.x, self.y)
-        new_coord = coords[spin]
-        loc = self._check_cell(map, new_coord[0], new_coord[1], look_for)
+        #new_coord = coords[spin]
+        new_coord_x, new_coord_y = get_cells_around_list[spin]
+
+        loc = self._check_cell(map, self.x + new_coord_x, self.y + new_coord_y, look_for)
         return loc
 
     def move_with_spin(self, map):
@@ -185,7 +194,7 @@ class Bot(object):
     def look_around(self):
         pass
 
-    def eat_another_bot(self, map, bots): #TODO: takes 73% of time, save bots in map
+    def eat_another_bot(self, map, bots):  # TODO: takes 73% of time, save bots in map
         cell = self._find_direction_cell(map, BOT)
         victim = None
 
@@ -233,7 +242,7 @@ class Bot(object):
             self.receive_energy(sun_rate)
         elif cmd == CREATE_COPY:
             mutate = False
-            if randrange(0,4) == 0:
+            if randint(0, 3) == 0:
                 mutate = True
             child = self.create_copy(map, mutate=mutate)
             return child
@@ -248,14 +257,14 @@ class Bot(object):
             return victim
         else:
             self.current_command = cmd
-            #TODO: spend energy even if did nothing
+            self.energy -= 1
+            # TODO: spend energy even if did nothing
 
     def _mutate(self):
-        rand_nmb = randrange(0, self.size)
+        rand_nmb = randint(0, self.size-1)
         cmd = self.commands[rand_nmb]
-        new_cmd_nmb = self._invert_bit(cmd, randrange(0, 6))
+        new_cmd_nmb = self._invert_bit(cmd, randint(0, 5))
         self.commands[rand_nmb] = new_cmd_nmb
         for i in self.commands:
             if self.commands[i] == EAT_ANOTHER_BOT:
                 self._predator = True
-

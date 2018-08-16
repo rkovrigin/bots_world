@@ -6,9 +6,10 @@ import sys
 from world import World
 from map import BOT, EMPTY
 
-DEFAULT_UNIV_X = 100
-DEFAULT_UNIV_Y = 100
-SCALE = 4
+DEFAULT_UNIV_X = 50
+DEFAULT_UNIV_Y = 50
+BOTS_AT_BEGINNING=60
+SCALE = 15
 
 
 class UniverseView(QGraphicsView):
@@ -27,9 +28,13 @@ class UniverseView(QGraphicsView):
         for y in range(columns):
             self.scene.addLine(0, y*SCALE, rows*SCALE, y*SCALE, QPen(Qt.black))
 
-    def drawCellAt(self, x, y, color=Qt.black):
+    def drawCellAt(self, x, y, color=Qt.black, energy=None):
         item = QGraphicsRectItem(x*SCALE, y*SCALE, SCALE, SCALE)
-        item.setBrush(QBrush(color))
+        if energy is None:
+            item.setBrush(QBrush(color))
+        else:
+            x = max(0, 255-energy)
+            item.setBrush(QColor(x, x, x))
         self.scene.addItem(item)
 
     def clearScene(self):
@@ -63,13 +68,14 @@ class UniverseView(QGraphicsView):
     def set_scene_energy(self, bots):
         for bot in bots:
             energy = bot.energy
+
             color = Qt.gray
             if energy < 10:
                 color = Qt.lightGray
             elif energy < 30:
                 color = Qt.yellow
             elif energy < 50:
-                color = Qt.yellow
+                color = Qt.darkYellow
             elif energy < 100:
                 color = Qt.red
             elif energy < 200:
@@ -80,6 +86,8 @@ class UniverseView(QGraphicsView):
                 color = Qt.black
             self.drawCellAt(bot.x, bot.y, color)
 
+            # self.drawCellAt(bot.x, bot.y, energy=energy)
+
 
 class Qwidget(QWidget):
 
@@ -87,7 +95,7 @@ class Qwidget(QWidget):
         super(Qwidget, self).__init__()
         # self.size = size
         self.game = None
-        self.world = World(DEFAULT_UNIV_X, DEFAULT_UNIV_Y, 100)
+        self.world = World(DEFAULT_UNIV_X, DEFAULT_UNIV_Y, BOTS_AT_BEGINNING)
         self.initUI()
         self.show()
 
