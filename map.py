@@ -1,3 +1,4 @@
+from collections import defaultdict
 from random import randint, randrange
 from bot import Bot
 
@@ -11,9 +12,7 @@ class Map(object):
     def __init__(self, x, y):
         self._x = x
         self._y = y
-        self._map = []
-        for _ in range(self._x):
-            self._map.append([None] * self._y)
+        self._map = defaultdict(lambda: None)
 
     @property
     def x(self):
@@ -36,7 +35,7 @@ class Map(object):
             if self._wrapper:
                 x %= self.x
                 y %= self.y
-            self._map[x][y] = member
+            self._map[(x, y)] = member
             return True
         else:
             return False
@@ -47,14 +46,15 @@ class Map(object):
             y %= self.y
             new_x %= self.x
             new_y %= self.y
-        self._map[new_x][new_y] = self._map[x][y]
-        self._map[x][y] = None
+        self._map[(new_x, new_y)] = self._map[(x, y)]
+        del self._map[(x, y)]
 
     def remove_bot(self, x, y):
         if self._wrapper:
             x %= self.x
             y %= self.y
-        self._map[x][y] = None
+        if (x, y) in self._map:
+            del self._map[(x, y)]
 
     def print_2d(self):
         print(self._map)
@@ -67,30 +67,24 @@ class Map(object):
 
     def at(self, x, y):
         if self._wrapper:
-            return self._map[x % self.x][y % self.y]
+            return self._map[(x % self.x, y % self.y)]
         elif 0 <= x < self.x or 0 <= y < self.y:
-            return self._map[x][y]
+            return self._map[(x, y)]
         else:
             return OutsideOfMap()
 
     def get_bots_amount(self):
-        #return Bot.amount_of_bots
-        amount = 0
-        for i in self.iterate_members(Bot):
-            amount += 1
-        return amount, Bot.amount_of_bots
+        return len(self._map)
 
     def cycle(self, sun_rate, cycle):
         for member, x, y in self.iterate_members(Bot):
             member.execute_command(sun_rate, x, y, cycle)
             if not member.is_alive:
-                self._map[x][y] = None
+                del self._map[(x, y)]
 
     def iterate_members(self, member_kind=None):
-        for x in range(self.x):
-            for y in range(self.y):
-                member = self._map[x][y]
-                if member is not None:
-                    if member_kind is None or isinstance(member, member_kind):
-                        yield member, x, y
+        dict2 = self._map.copy()
+        for (x, y), member in dict2.items():
+            if member_kind is None or isinstance(member, member_kind):
+                yield member, x, y
         return None
