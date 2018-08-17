@@ -1,5 +1,4 @@
 from random import randrange, randint
-from map import EMPTY, BOT
 
 EAT_MINERAL = 10
 GET_ENERGY = 23
@@ -30,21 +29,24 @@ how many bots has eaten
 
 
 class Bot(object):
-    __slots__ = ["x", "y", "energy", "_size", "commands", "age", "_is_alife", "move_cost", "current_command",
-                 "_max_age", "_predator", "sun_rate"]
+    __slots__ = ["_mutant", "_energy", "_size", "_commands", "_age", "_is_alive", "_move_cost", "_current_command",
+                 "_max_age", "_predator", "sun_rate", "_map", "_current_cycle"]
 
-    def __init__(self, x, y, energy=10, mutate=False, copy_commands=None, predator=False):
-        self.x = x
-        self.y = y
-        self.energy = energy
+    amount_of_bots = 0
+
+    def __init__(self, map, energy=10, mutant=False, copy_commands=None, predator=False):
+        self._mutant = mutant
+        self._energy = energy
         self._size = 64
-        self.commands = [0] * self.size
-        self.age = 0
-        self._is_alife = True
-        self.move_cost = randrange(1, 5)
-        self.current_command = 0
+        self._commands = [0] * self.size
+        self._age = 0
+        self._is_alive = True
+        self._move_cost = randrange(1, 5)
+        self._current_command = 0
         self._max_age = randrange(40, 70)
         self._predator = predator
+        self._map = map
+        self._current_cycle = 0
         if self._predator:
             self.sun_rate = 0
         else:
@@ -54,147 +56,145 @@ class Bot(object):
             for i in range(self._size):
                 r = randrange(0, 3)
                 if r == 0:
-                    self.commands[i] = GET_ENERGY
+                    self._commands[i] = GET_ENERGY
                 elif r == 1:
-                    self.commands[i] = randrange(0, 64)
+                    self._commands[i] = randrange(0, 64)
                 else:
                     if randrange(0, 2) == 0:
-                        self.commands[i] = CREATE_COPY
+                        self._commands[i] = CREATE_COPY
                     else:
-                        self.commands[i] = MOVE
+                        self._commands[i] = MOVE
         else:
-            self.commands = copy_commands[:]
+            self._commands = copy_commands[:]
 
-        self.current_command = 0
-        self._is_alife = True
+        self._current_command = 0
+        self._is_alive = True
 
-        if mutate:
+        if mutant:
             self._mutate()
 
-    def _next_command_pointer(self, step=1):
-        return (self.current_command + step) % self.size
+        Bot.amount_of_bots += 1
 
     @property
     def size(self):
         return self._size
+
+    @property
+    def predator(self):
+        return self._predator
+
+    @property
+    def is_alive(self):
+        return self._is_alive
+
+    @property
+    def age(self):
+        return self._age
+
+    @property
+    def energy(self):
+        return self._energy
 
     @staticmethod
     def _invert_bit(nmb, bit_to_change):
         nmb ^= 1 << bit_to_change
         return nmb
 
-    def create_copy(self, map, mutate=False):
-        for i in range(1, 5):
-            crd = self._find_direction_cell(map, x=i)
-            if crd is not None:
-                break
+    def _next_command_pointer(self, step=1):
+        return (self._current_command + step) % self.size
 
-        if self.energy >= 70 and crd is not None:
-            self.energy -= 30
-            child = Bot(crd['x'], crd['y'], energy=10, mutate=mutate, copy_commands=self.commands,
-                        predator=self._predator)
-            map._map[child.x][child.y] = BOT
+    def create_copy(self, x, y, mutate=False):
+        for i in range(1, 5):
+            coord_x, coord_y = self._find_direction_cell(x, y, pointer_step=i)
+            if self._map.at(coord_x, coord_y) is None:
+                break
+        else:
+            return False
+
+        if self._energy >= 70:
+            self._energy -= 30
+            child = Bot(self._map, energy=10, mutant=mutate, copy_commands=self._commands, predator=self._predator)
+            self._map.add_member(child, coord_x, coord_y)
             if self._predator:
                 child._predator = True
                 child.sun_rate = 0
             else:
                 child.sun_rate = self.sun_rate + (randrange(1, 11) / 100.0) - (randrange(1, 11) / 100.0)
-            return child
-            # TODO: create bot with probability of evolution is 25% and add it to the map
-            # if randrange(0, __evolution_probability__) == 0:
-        return None
+            child._move_cost = self._move_cost
+            child._max_age = self._max_age
+            child._current_cycle = self._current_cycle
+            return True
+        return False
 
-    def _check_cell(self, map, x, y, look_for=EMPTY):
-        crd = {'x': None, 'y': None}
-        if x < 0 or y < 0:
-            return None
-        if x >= map._N or y >= map._M:
-            return None
-
-        if map.at(x, y) == look_for:
-            crd['x'] = x
-            crd['y'] = y
-            return crd
-
-    def _find_direction_cell(self, map, look_for=EMPTY, x=1):
-        next_cp = self._next_command_pointer(x)
-        spin = self.commands[next_cp] % 8
+    def _find_direction_cell(self, x, y, pointer_step=1):
+        next_cp = self._next_command_pointer(pointer_step)
+        spin = self._commands[next_cp] % 8
         new_coord_x, new_coord_y = get_cells_around_list[spin]
-        loc = self._check_cell(map, self.x + new_coord_x, self.y + new_coord_y, look_for)
-        return loc
+        return x + new_coord_x, y + new_coord_y
 
-    def move_with_spin(self, map):
-        loc = self._find_direction_cell(map)
+    def move_with_spin(self, x, y):
+        coord_x, coord_y = self._find_direction_cell(x, y)
 
-        if self.energy <= self.move_cost or loc is None:
-            return
+        if self._energy <= self._move_cost or self._map.at(coord_x, coord_y) is not None:
+            return False
 
-        _x = loc['x']
-        _y = loc['y']
-
-        map._map[self.x][self.y] = EMPTY
-        map._map[_x][_y] = BOT
-        self.x = _x
-        self.y = _y
-
-        self.energy -= self.move_cost
+        self._map.move(x, y, coord_x, coord_y)
+        self._energy -= self._move_cost
+        return True
 
     def receive_energy(self, sun_rate):
         if sun_rate > 20:
             self.die("SUN RATE REASON")
-            return self
         else:
-            self.energy += sun_rate * self.sun_rate
+            self._energy += sun_rate * self.sun_rate
 
-    def eat_meneral(self):
+    def eat_mineral(self):
         pass
 
     def look_around(self):
         pass
 
-    def eat_another_bot(self, map, bots):  # TODO: takes 73% of time, save bots in map
-        cell = self._find_direction_cell(map, BOT)
-        victim = None
+    def eat_another_bot(self, x, y):  # TODO: takes 73% of time, save bots in map
+        coord_x, coord_y = self._find_direction_cell(x, y)
 
-        if cell is None:
-            return
+        possible_victim = self._map.at(coord_x, coord_y)
+        if isinstance(possible_victim, Bot):
+            if possible_victim._predator:
+                return False
 
-        for v in bots:
-            if cell['x'] == v.x and cell['y'] == v.y:
-                victim = v
-                break
+            if self._energy <= 40 and self._energy <= possible_victim._energy:
+                return False
 
-        if victim._predator == True:
-            return
+            self._energy += possible_victim._energy
+            possible_victim.die("EATEN BY PREDATOR REASON")
+            return True
 
-        if self.energy <= 40 and self.energy <= victim.energy:
-            return
-
-        self.energy += victim.energy
-        victim.die("EATEN BY PREDATOR REASON")
-
-        return victim
+        return False
 
     def die(self, reason):
-        self._is_alife = False
-        self.energy = 0
+        self._is_alive = False
+        self._energy = 0
+        Bot.amount_of_bots -= 1
         # print(reason)
 
-    def execute_command(self, sun_rate, map, bots):
+    def execute_command(self, sun_rate, x, y, cycle):
+        if cycle == self._current_cycle:
+            return
+        else:
+            self._current_cycle = cycle
 
-        if self.energy <= 0:
-            self.die("ENERGY = 0 RESON")
-            return self
+        if self._energy <= 0:
+            self.die("ENERGY = 0 REASON")
+            return
 
-        if self.age >= self._max_age:
+        if self._age >= self._max_age:
             self.die("AGE REASON")
-            return self
+            return
 
-        # self._max_age -= 1
-        self.age += 1
+        self._age += 1
 
-        self.current_command = self._next_command_pointer()
-        cmd = self.commands[self.current_command]
+        self._current_command = self._next_command_pointer()
+        cmd = self._commands[self._current_command]
 
         if cmd == GET_ENERGY:
             self.receive_energy(sun_rate)
@@ -202,27 +202,25 @@ class Bot(object):
             mutate = False
             if randint(0, 3) == 0:
                 mutate = True
-            child = self.create_copy(map, mutate=mutate)
-            return child
+            self.create_copy(x, y, mutate=mutate)
         elif cmd == EAT_MINERAL:
-            self.eat_meneral()
+            self.eat_mineral()
         elif cmd == LOOK_AROUND:
             self.look_around()
         elif cmd == MOVE:
-            self.move_with_spin(map)
+            self.move_with_spin(x, y)
         elif cmd == EAT_ANOTHER_BOT:
-            victim = self.eat_another_bot(map, bots)
-            return victim
+            self.eat_another_bot(x, y)
         else:
-            self.current_command = cmd
-            self.energy -= 1
+            self._current_command = cmd
+            self._energy -= 1
             # TODO: spend energy even if did nothing
 
     def _mutate(self):
         rand_nmb = randint(0, self.size - 1)
-        cmd = self.commands[rand_nmb]
+        cmd = self._commands[rand_nmb]
         new_cmd_nmb = self._invert_bit(cmd, randint(0, 5))
-        self.commands[rand_nmb] = new_cmd_nmb
-        for i in self.commands:
-            if self.commands[i] == EAT_ANOTHER_BOT:
+        self._commands[rand_nmb] = new_cmd_nmb
+        for i in self._commands:
+            if self._commands[i] == EAT_ANOTHER_BOT:
                 self._predator = True

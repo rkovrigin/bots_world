@@ -3,8 +3,9 @@ from PyQt5.QtCore import *
 from PyQt5.QtGui import *
 import random
 import sys
+
+from bot import Bot
 from world import World
-from map import BOT, EMPTY
 
 DEFAULT_UNIV_X = 100
 DEFAULT_UNIV_Y = 100
@@ -37,56 +38,52 @@ class UniverseView(QGraphicsView):
             item.setBrush(QColor(x, x, x))
         self.scene.addItem(item)
 
-    def clearScene(self):
+    def clear_scene(self):
         self.scene.clear()
 
     def random_scene(self):
         for i in range(DEFAULT_UNIV_X):
             for j in range(DEFAULT_UNIV_Y):
                 if not random.randrange(100) % 2:
-                    self.drawCellAt(i,j)
+                    self.drawCellAt(i, j)
 
     def set_scene(self, map):
-        for x in range(map._N):
-            for y in range(map._M):
-                if map.at(x,y) == BOT:
-                    self.drawCellAt(x, y)
+        for bot, x, y in map.iterate_members(Bot):
+            self.drawCellAt(x, y)
 
-    def set_scene_bots(self, bots):
-        for bot in bots:
-            if bot._predator is True:
-                self.drawCellAt(bot.x, bot.y, Qt.red)
-            elif bot.age < 15:
-                self.drawCellAt(bot.x, bot.y, Qt.green)
-            elif bot._max_age - bot.age <= 20:
-                self.drawCellAt(bot.x, bot.y, Qt.gray)
+    def set_scene_bots(self, map):
+        for bot, x, y in map.iterate_members(Bot):
+            if bot.predator:
+                self.drawCellAt(x, y, Qt.red)
+            elif bot.age < 50:
+                self.drawCellAt(x, y, Qt.green)
             else:
-                self.drawCellAt(bot.x, bot.y)
+                self.drawCellAt(x, y, Qt.darkGreen)
 
         # self.drawUniverse(DEFAULT_UNIV_X, DEFAULT_UNIV_Y)
 
-    def set_scene_energy(self, bots):
-        for bot in bots:
-            energy = bot.energy
+    def set_scene_energy(self, map):
+        for bot, x, y in map.iterate_members(Bot):
+            # energy = bot.energy
 
-            color = Qt.gray
-            if energy < 10:
-                color = Qt.lightGray
-            elif energy < 30:
-                color = Qt.yellow
-            elif energy < 50:
-                color = Qt.darkYellow
-            elif energy < 100:
-                color = Qt.red
-            elif energy < 200:
-                color = Qt.darkRed
-            elif energy < 500:
-                color = Qt.magenta
-            else:
-                color = Qt.black
-            self.drawCellAt(bot.x, bot.y, color)
+            # color = Qt.gray
+            # if energy < 10:
+            #     color = Qt.lightGray
+            # elif energy < 30:
+            #     color = Qt.yellow
+            # elif energy < 50:
+            #     color = Qt.darkYellow
+            # elif energy < 100:
+            #     color = Qt.red
+            # elif energy < 200:
+            #     color = Qt.darkRed
+            # elif energy < 500:
+            #     color = Qt.magenta
+            # else:
+            #     color = Qt.black
+            # self.drawCellAt(x, y, color)
 
-            # self.drawCellAt(bot.x, bot.y, energy=energy)
+            self.drawCellAt(x, y, energy=bot.energy)
 
 
 class Qwidget(QWidget):
@@ -121,11 +118,11 @@ class Qwidget(QWidget):
         self.timer.start()
 
     def tick(self):
-        self.view.clearScene()
+        self.view.clear_scene()
         self.world.cycle()
         # self.view.set_scene(self.world._map)
-        self.view.set_scene_bots(self.world._bots)
-        # self.view.set_scene_energy(self.world._bots)
+        self.view.set_scene_bots(self.world._map)
+        # self.view.set_scene_energy(self.world._map)
 
 app = QApplication(sys.argv)
 # gol = GameOfLifeApp()
