@@ -17,6 +17,18 @@ get_cells_around_list = ((-1, -1), (1, 1), (1, -1), (-1, 1), (-1, 0), (1, 0), (0
 
 
 # TODO: Implement sharing of energy with kind. Same kind - similar except 1 bit or 1 command
+# TODO: Remember the best bots depending on these values:
+"""
+_max_age
+max amount of saved energy
+max sun_rate
+how many children gave a birth
+max distance passed
+how many bots has eaten
+"""
+# TODO: After that generate new generation with the best bots
+
+
 class Bot(object):
     __slots__ = ["x", "y", "energy", "_size", "commands", "age", "_is_alife", "move_cost", "current_command",
                  "_max_age", "_predator", "sun_rate"]
