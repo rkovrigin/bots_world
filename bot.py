@@ -118,12 +118,8 @@ class Bot(object):
 
     def _find_direction_cell(self, map, look_for=EMPTY, x=1):
         next_cp = self._next_command_pointer(x)
-
-        # coords = get_cells_around(self.x, self.y)
         spin = self.commands[next_cp] % 8
-        # new_coord = coords[spin]
         new_coord_x, new_coord_y = get_cells_around_list[spin]
-
         loc = self._check_cell(map, self.x + new_coord_x, self.y + new_coord_y, look_for)
         return loc
 
@@ -133,7 +129,6 @@ class Bot(object):
         if self.energy <= self.move_cost or loc is None:
             return
 
-        # loc = paths[randrange(len(paths))]
         _x = loc['x']
         _y = loc['y']
 

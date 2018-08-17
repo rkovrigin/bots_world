@@ -7,6 +7,8 @@ BOT_PREDATOR = 3
 BOTS = [BOT, BOT_VEGAN, BOT_PREDATOR]
 
 
+
+
 class Map(object):
     __slots__ = ["_N", "_M", "_map", "_plt"]
 
