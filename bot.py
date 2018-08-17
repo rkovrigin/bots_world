@@ -18,7 +18,9 @@ get_cells_around_list = ((-1, -1), (1, 1), (1, -1), (-1, 1), (-1, 0), (1, 0), (0
 
 # TODO: Implement sharing of energy with kind. Same kind - similar except 1 bit or 1 command
 class Bot(object):
-    __slots__ = ["x", "y", "energy", "_size", "commands", "age", "_is_alife", "move_cost", "current_command", "_max_age", "_predator", "sun_rate"]
+    __slots__ = ["x", "y", "energy", "_size", "commands", "age", "_is_alife", "move_cost", "current_command",
+                 "_max_age", "_predator", "sun_rate"]
+
     def __init__(self, x, y, energy=10, mutate=False, copy_commands=None, predator=False):
         self.x = x
         self.y = y
@@ -57,8 +59,8 @@ class Bot(object):
         if mutate:
             self._mutate()
 
-    def _next_command_pointer(self):
-        return (self.current_command + 1) % self.size
+    def _next_command_pointer(self, step=1):
+        return (self.current_command + step) % self.size
 
     @property
     def size(self):
@@ -70,11 +72,15 @@ class Bot(object):
         return nmb
 
     def create_copy(self, map, mutate=False):
-        crds = self.find_grids_around(map)
-        if self.energy >= 70 and len(crds) > 0:
+        for i in range(1, 5):
+            crd = self._find_direction_cell(map, x=i)
+            if crd is not None:
+                break
+
+        if self.energy >= 70 and crd is not None:
             self.energy -= 30
-            crd = crds[randrange(0, len(crds))]
-            child = Bot(crd[0], crd[1], energy=10, mutate=mutate, copy_commands=self.commands, predator=self._predator)
+            child = Bot(crd['x'], crd['y'], energy=10, mutate=mutate, copy_commands=self.commands,
+                        predator=self._predator)
             map._map[child.x][child.y] = BOT
             if self._predator:
                 child._predator = True
@@ -98,53 +104,12 @@ class Bot(object):
             crd['y'] = y
             return crd
 
-    def find_grids_around(self, map):
-        crds = []
+    def _find_direction_cell(self, map, look_for=EMPTY, x=1):
+        next_cp = self._next_command_pointer(x)
 
-        if self._check_cell(map, self.x - 1, self.y - 1):
-            crds.append([self.x - 1, self.y - 1])
-        if self._check_cell(map, self.x + 1, self.y + 1):
-            crds.append([self.x + 1, self.y + 1])
-        if self._check_cell(map, self.x + 1, self.y - 1):
-            crds.append([self.x + 1, self.y - 1])
-        if self._check_cell(map, self.x - 1, self.y + 1):
-            crds.append([self.x - 1, self.y + 1])
-        if self._check_cell(map, self.x - 1, self.y):
-            crds.append([self.x - 1, self.y])
-        if self._check_cell(map, self.x + 1, self.y):
-            crds.append([self.x + 1, self.y])
-        if self._check_cell(map, self.x, self.y - 1):
-            crds.append([self.x, self.y - 1])
-        if self._check_cell(map, self.x, self.y + 1):
-            crds.append([self.x, self.y + 1])
-
-        if len(crds) > 0:
-            return crds
-        return []
-
-    def move_random_direction(self, map):
-        paths = self.find_grids_around(map)
-
-        if self.energy <= self.move_cost or len(paths) <= 0:
-            return
-
-        loc = paths[randrange(len(paths))]
-        _x = loc['x']
-        _y = loc['y']
-
-        map._map[self.x][self.y] = EMPTY
-        map._map[_x][_y] = BOT
-        self.x = _x
-        self.y = _y
-
-        self.energy -= self.move_cost
-
-    def _find_direction_cell(self, map, look_for=EMPTY):
-        next_cp = self._next_command_pointer()
-
-        #coords = get_cells_around(self.x, self.y)
+        # coords = get_cells_around(self.x, self.y)
         spin = self.commands[next_cp] % 8
-        #new_coord = coords[spin]
+        # new_coord = coords[spin]
         new_coord_x, new_coord_y = get_cells_around_list[spin]
 
         loc = self._check_cell(map, self.x + new_coord_x, self.y + new_coord_y, look_for)
@@ -247,7 +212,7 @@ class Bot(object):
             # TODO: spend energy even if did nothing
 
     def _mutate(self):
-        rand_nmb = randint(0, self.size-1)
+        rand_nmb = randint(0, self.size - 1)
         cmd = self.commands[rand_nmb]
         new_cmd_nmb = self._invert_bit(cmd, randint(0, 5))
         self.commands[rand_nmb] = new_cmd_nmb
