@@ -5,8 +5,11 @@ from bot import Bot
 class OutsideOfMap(object):
     pass
 
+outside_map = OutsideOfMap()
+
 class Map(object):
     __slots__ = ["_x", "_y", "_map", "_plt", "_sun_rate", "_wrapper"]
+    outside_map = OutsideOfMap()
 
     def __init__(self, x, y, wrapper=True):
         self._x = x
@@ -34,18 +37,21 @@ class Map(object):
     def is_empty(self, x, y):
         return self.at(x, y) is None
 
-    def add_member(self, member, x=None, y=None):
+    def add_member_in_pos(self, member, x, y):
+        if self._wrapper:
+            x %= self.x
+            y %= self.y
+        self._map[(x, y)] = member
+        return True
+
+    def add_member_in_rand(self, member, x=None, y=None):
         if x is None:
             x = randrange(0, self.x)
         if y is None:
             y = randrange(0, self.y)
 
         if self.is_empty(x, y):
-            if self._wrapper:
-                x %= self.x
-                y %= self.y
-            self._map[(x, y)] = member
-            return True
+            return self.add_member_in_pos(member, x, y)
         else:
             return False
 
@@ -78,13 +84,18 @@ class Map(object):
         if self._wrapper:
             x %= self.x
             y %= self.y
-        if 0 <= x < self.x or 0 <= y < self.y:
+
+            if (x, y) in self._map:
+                return self._map[(x, y)]
+            else:
+                return None
+        elif 0 <= x < self.x or 0 <= y < self.y:
             if (x, y) in self._map:
                 return self._map[(x, y)]
             else:
                 return None
         else:
-            return OutsideOfMap()
+            return outside_map
 
     def get_bots_amount(self):
         return len(self._map)

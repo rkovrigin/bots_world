@@ -109,7 +109,7 @@ class Qwidget(QWidget):
 
         self.item = None
         self.timer = QTimer()
-        self.timer.setInterval(100)
+        self.timer.setInterval(1)
         self.timer.timeout.connect(self.tick)
         self.layout().addWidget(self.label)
         self.select()
@@ -120,10 +120,10 @@ class Qwidget(QWidget):
         self.timer.start()
 
     def tick(self):
-        self.view.clear_scene()
+        # self.view.clear_scene()
         test = self.world.cycle()
         # self.view.set_scene(self.world._map)
-        self.view.set_scene_bots(self.world._map)
+        # self.view.set_scene_bots(self.world._map)
         self.label.setText(test)
         # self.view.set_scene_energy(self.world._map)
 

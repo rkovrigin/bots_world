@@ -1,4 +1,4 @@
-from random import randrange, randint
+from random import randrange, randint, choice
 
 EAT_MINERAL = 10
 GET_ENERGY = 23
@@ -14,6 +14,7 @@ MASK = 0b111111
 
 get_cells_around_list = ((-1, -1), (1, 1), (1, -1), (-1, 1), (-1, 0), (1, 0), (0, -1), (0, 1))
 
+sun_rates_diff = list((i/100 for i in range(-10, 11)))
 
 # TODO: Implement sharing of energy with kind. Same kind - similar except 1 bit or 1 command
 # TODO: Remember the best bots depending on these values:
@@ -32,7 +33,7 @@ class Bot(object):
     __slots__ = ["_mutant", "_energy", "_size", "_commands", "_age", "_is_alive", "_move_cost", "_current_command",
                  "_max_age", "_predator", "sun_rate", "_map"]
 
-    amount_of_bots = 0
+    #amount_of_bots = 0
 
     def __init__(self, map, energy=10, mutant=False, copy_commands=None, predator=False):
         self._mutant = mutant
@@ -49,7 +50,7 @@ class Bot(object):
         if self._predator:
             self.sun_rate = 0
         else:
-            self.sun_rate = randrange(9, 11) / 10.0
+            self.sun_rate = choice((0.9, 1.0))
 
         if copy_commands is None:  # TODO: add random numbers
             for i in range(self._size):
@@ -67,12 +68,12 @@ class Bot(object):
             self._commands = copy_commands[:]
 
         self._current_command = 0
-        self._is_alive = True
+        #self._is_alive = True
 
         if mutant:
             self._mutate()
 
-        Bot.amount_of_bots += 1
+        #Bot.amount_of_bots += 1
 
     @property
     def size(self):
@@ -100,7 +101,10 @@ class Bot(object):
         return nmb
 
     def _next_command_pointer(self, step=1):
-        return (self._current_command + step) % self.size
+        next_cmd = self._current_command + step
+        if next_cmd >= self._size:
+            return next_cmd - self._size
+        return next_cmd
 
     def create_copy(self, x, y, mutate=False):
         for i in range(1, 5):
@@ -113,12 +117,12 @@ class Bot(object):
         if self._energy >= 70:
             self._energy -= 30
             child = Bot(self._map, energy=10, mutant=mutate, copy_commands=self._commands, predator=self._predator)
-            self._map.add_member(child, coord_x, coord_y)
+            self._map.add_member_in_pos(child, coord_x, coord_y)
             if self._predator:
                 child._predator = True
                 child.sun_rate = 0
             else:
-                child.sun_rate += (randrange(1, 11) / 100.0) - (randrange(1, 11) / 100.0)
+                child.sun_rate += choice(sun_rates_diff)
             child._move_cost = self._move_cost
             child._max_age = self._max_age
             return True
@@ -177,7 +181,7 @@ class Bot(object):
     def die(self, reason):
         self._is_alive = False
         self._energy = 0
-        Bot.amount_of_bots -= 1
+        #Bot.amount_of_bots -= 1
         # print(reason)
 
     def execute_command(self, x, y):
