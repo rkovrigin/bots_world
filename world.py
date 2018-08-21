@@ -11,7 +11,7 @@ sun_rates = [4,4,5,6,7,8,9,7,6,4,5,3,2]
 
 class World(object):
     def __init__(self, x, y, init_bot_amount=100):
-        self._map = Map(x, y)
+        self._map = Map(x, y, wrapper=True)
         self._date = 0
         self._cycle = 0
         self._init_bot_amount = init_bot_amount
@@ -36,13 +36,15 @@ class World(object):
         #     sun_rate = SUN_RATE / 2
 
         sun_rate = sun_rates[self._date//DAYS_IN_MONTH]
-        self._map.cycle(sun_rate, self._cycle)
+        self._map.sun_rate = sun_rate
+        self._map.cycle()
 
         self._date = (self._date + 1) % (DAYS_IN_MONTH * MONTHS)
         self._cycle += 1
         loop = self._map.get_bots_amount()
-        print("Cycle: %d; Day: %d; Population: %s; Sun rate: %f" % (self._cycle, self._date, loop, sun_rate))
-        self.print_bots()
+        # print("Cycle: %d; Day: %d; Population: %s; Sun rate: %f" % (self._cycle, self._date, loop, sun_rate))
+        return "Cycle: %d; Day: %d; Population: %s; Sun rate: %f" % (self._cycle, self._date, loop, sun_rate)
+        # self.print_bots()
 
     def print_bots(self):
         pass

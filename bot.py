@@ -30,7 +30,7 @@ how many bots has eaten
 
 class Bot(object):
     __slots__ = ["_mutant", "_energy", "_size", "_commands", "_age", "_is_alive", "_move_cost", "_current_command",
-                 "_max_age", "_predator", "sun_rate", "_map", "_current_cycle"]
+                 "_max_age", "_predator", "sun_rate", "_map"]
 
     amount_of_bots = 0
 
@@ -46,7 +46,6 @@ class Bot(object):
         self._max_age = randrange(40, 70)
         self._predator = predator
         self._map = map
-        self._current_cycle = 0
         if self._predator:
             self.sun_rate = 0
         else:
@@ -119,10 +118,9 @@ class Bot(object):
                 child._predator = True
                 child.sun_rate = 0
             else:
-                child.sun_rate = self.sun_rate + (randrange(1, 11) / 100.0) - (randrange(1, 11) / 100.0)
+                child.sun_rate += (randrange(1, 11) / 100.0) - (randrange(1, 11) / 100.0)
             child._move_cost = self._move_cost
             child._max_age = self._max_age
-            child._current_cycle = self._current_cycle
             return True
         return False
 
@@ -131,6 +129,11 @@ class Bot(object):
         spin = self._commands[next_cp] % 8
         new_coord_x, new_coord_y = get_cells_around_list[spin]
         return x + new_coord_x, y + new_coord_y
+
+    def _find_direction(self, pointer_step=1):
+        next_cp = self._next_command_pointer(pointer_step)
+        direction = self._commands[next_cp] % len(get_cells_around_list)
+        return direction
 
     def move_with_spin(self, x, y):
         coord_x, coord_y = self._find_direction_cell(x, y)
@@ -177,12 +180,7 @@ class Bot(object):
         Bot.amount_of_bots -= 1
         # print(reason)
 
-    def execute_command(self, sun_rate, x, y, cycle):
-        if cycle == self._current_cycle:
-            return
-        else:
-            self._current_cycle = cycle
-
+    def execute_command(self, x, y):
         if self._energy <= 0:
             self.die("ENERGY = 0 REASON")
             return
@@ -197,7 +195,7 @@ class Bot(object):
         cmd = self._commands[self._current_command]
 
         if cmd == GET_ENERGY:
-            self.receive_energy(sun_rate)
+            self.receive_energy(self._map.sun_rate)
         elif cmd == CREATE_COPY:
             mutate = False
             if randint(0, 3) == 0:

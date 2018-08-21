@@ -9,8 +9,8 @@ from world import World
 
 DEFAULT_UNIV_X = 100
 DEFAULT_UNIV_Y = 100
-BOTS_AT_BEGINNING = 10
-SCALE = 6
+BOTS_AT_BEGINNING = 100
+SCALE = 5
 
 
 class UniverseView(QGraphicsView):
@@ -60,7 +60,7 @@ class UniverseView(QGraphicsView):
             else:
                 self.drawCellAt(x, y, Qt.darkGreen)
 
-        # self.drawUniverse(DEFAULT_UNIV_X, DEFAULT_UNIV_Y)
+        #self.drawUniverse(DEFAULT_UNIV_X, DEFAULT_UNIV_Y)
 
     def set_scene_energy(self, map):
         for bot, x, y in map.iterate_members(Bot):
@@ -93,6 +93,7 @@ class Qwidget(QWidget):
         # self.size = size
         self.game = None
         self.world = World(DEFAULT_UNIV_X, DEFAULT_UNIV_Y, BOTS_AT_BEGINNING)
+        self.label = QLabel()
         self.initUI()
         self.show()
 
@@ -110,6 +111,7 @@ class Qwidget(QWidget):
         self.timer = QTimer()
         self.timer.setInterval(100)
         self.timer.timeout.connect(self.tick)
+        self.layout().addWidget(self.label)
         self.select()
 
     def select(self):
@@ -118,10 +120,11 @@ class Qwidget(QWidget):
         self.timer.start()
 
     def tick(self):
-        self.view.clear_scene()
-        self.world.cycle()
+        # self.view.clear_scene()
+        test = self.world.cycle()
         # self.view.set_scene(self.world._map)
         self.view.set_scene_bots(self.world._map)
+        self.label.setText(test)
         # self.view.set_scene_energy(self.world._map)
 
 app = QApplication(sys.argv)
