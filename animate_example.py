@@ -120,7 +120,7 @@ class Qwidget(QWidget):
         self.timer.start()
 
     def tick(self):
-        # self.view.clear_scene()
+        self.view.clear_scene()
         test = self.world.cycle()
         # self.view.set_scene(self.world._map)
         self.view.set_scene_bots(self.world._map)

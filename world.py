@@ -42,9 +42,7 @@ class World(object):
         self._date = (self._date + 1) % (DAYS_IN_MONTH * MONTHS)
         self._cycle += 1
         loop = self._map.get_bots_amount()
-        # print("Cycle: %d; Day: %d; Population: %s; Sun rate: %f" % (self._cycle, self._date, loop, sun_rate))
         return "Cycle: %d; Day: %d; Population: %s; Sun rate: %f" % (self._cycle, self._date, loop, sun_rate)
-        # self.print_bots()
 
     def print_bots(self):
         pass
