@@ -102,6 +102,9 @@ class Bot(object):
         return next_cmd
 
     def create_copy(self, x, y, mutate=False):
+        if self._map.get_bots_amount() > 1000:
+            return
+
         for i in range(1, 5):
             coord_x, coord_y = self._find_direction_cell(x, y, pointer_step=i)
             if self._map.at(coord_x, coord_y) is None:
@@ -220,3 +223,6 @@ class Bot(object):
         for i in self._commands:
             if self._commands[i] == EAT_ANOTHER_BOT:
                 self._predator = True
+
+# TODO: Implement running out of predators
+# TODO: Implement following the victim

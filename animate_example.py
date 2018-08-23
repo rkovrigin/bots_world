@@ -7,7 +7,7 @@ import sys
 from bot import Bot
 from world import World
 
-DEFAULT_UNIV_X = 100
+DEFAULT_UNIV_X = 200
 DEFAULT_UNIV_Y = 100
 BOTS_AT_BEGINNING = 10
 SCALE = 5
