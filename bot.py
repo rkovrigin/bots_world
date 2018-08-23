@@ -33,8 +33,6 @@ class Bot(object):
     __slots__ = ["_mutant", "_energy", "_size", "_commands", "_age", "_is_alive", "_move_cost", "_current_command",
                  "_max_age", "_predator", "sun_rate", "_map"]
 
-    #amount_of_bots = 0
-
     def __init__(self, map, energy=10, mutant=False, copy_commands=None, predator=False):
         self._mutant = mutant
         self._energy = energy
@@ -68,12 +66,9 @@ class Bot(object):
             self._commands = copy_commands[:]
 
         self._current_command = 0
-        #self._is_alive = True
 
         if mutant:
             self._mutate()
-
-        #Bot.amount_of_bots += 1
 
     @property
     def size(self):
@@ -181,7 +176,6 @@ class Bot(object):
     def die(self, reason):
         self._is_alive = False
         self._energy = 0
-        #Bot.amount_of_bots -= 1
         # print(reason)
 
     def execute_command(self, x, y):

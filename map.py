@@ -15,7 +15,6 @@ class Map(object):
         self._x = x
         self._y = y
         self._wrapper = wrapper
-        #self._map = defaultdict(lambda: None)
         self._map = {}
 
     @property
@@ -112,4 +111,3 @@ class Map(object):
             member = self._map[(x, y)]
             if member_kind is None or isinstance(member, member_kind):
                 yield member, x, y
-        #return None

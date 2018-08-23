@@ -9,7 +9,7 @@ from world import World
 
 DEFAULT_UNIV_X = 100
 DEFAULT_UNIV_Y = 100
-BOTS_AT_BEGINNING = 100
+BOTS_AT_BEGINNING = 10
 SCALE = 5
 
 
@@ -29,13 +29,32 @@ class UniverseView(QGraphicsView):
         for y in range(columns):
             self.scene.addLine(0, y*SCALE, rows*SCALE, y*SCALE, QPen(Qt.black))
 
-    def drawCellAt(self, x, y, color=Qt.black, energy=None):
+    def drawCellAt(self, x, y, color=Qt.black):
         item = QGraphicsRectItem(x*SCALE, y*SCALE, SCALE, SCALE)
-        if energy is None:
-            item.setBrush(QBrush(color))
+        item.setBrush(QBrush(color))
+        self.scene.addItem(item)
+
+    def drawEnergyCellAt(self, x, y, energy):
+        if energy < 10:
+            color = Qt.lightGray
+        elif energy < 30:
+            color = Qt.yellow
+        elif energy < 50:
+            color = Qt.darkYellow
+        elif energy < 100:
+            color = Qt.red
+        elif energy < 200:
+            color = Qt.darkRed
+        elif energy < 500:
+            color = Qt.magenta
         else:
-            x = max(0, 255-energy)
-            item.setBrush(QColor(x, x, x))
+            color = Qt.black
+        self.drawCellAt(x, y, color)
+
+    def drawEnergyGrayCellAt(self, x, y, energy):
+        item = QGraphicsRectItem(x*SCALE, y*SCALE, SCALE, SCALE)
+        x = max(0, 255-energy)
+        item.setBrush(QColor(x, x, x))
         self.scene.addItem(item)
 
     def clear_scene(self):
@@ -48,11 +67,18 @@ class UniverseView(QGraphicsView):
                     self.drawCellAt(i, j)
 
     def set_scene(self, map):
-        for bot, x, y in map.iterate_members(Bot):
+        for bot, x, y in map.iterate_members():
             self.drawCellAt(x, y)
 
+    def set_scene_rainbow(self, map):
+        for bot, x, y in map.iterate_members():
+            #energy = max(0, 255 - bot.energy)
+            #age = min(bot.age, 255)
+            self.drawCellAt(x, y, QColor(150, x*256/map.x, y*256/map.y))
+
+
     def set_scene_bots(self, map):
-        for bot, x, y in map.iterate_members(Bot):
+        for bot, x, y in map.iterate_members():
             if bot.predator:
                 self.drawCellAt(x, y, Qt.red)
             elif bot.age < 50:
@@ -63,31 +89,12 @@ class UniverseView(QGraphicsView):
         #self.drawUniverse(DEFAULT_UNIV_X, DEFAULT_UNIV_Y)
 
     def set_scene_energy(self, map):
-        for bot, x, y in map.iterate_members(Bot):
-            # energy = bot.energy
-
-            # color = Qt.gray
-            # if energy < 10:
-            #     color = Qt.lightGray
-            # elif energy < 30:
-            #     color = Qt.yellow
-            # elif energy < 50:
-            #     color = Qt.darkYellow
-            # elif energy < 100:
-            #     color = Qt.red
-            # elif energy < 200:
-            #     color = Qt.darkRed
-            # elif energy < 500:
-            #     color = Qt.magenta
-            # else:
-            #     color = Qt.black
-            # self.drawCellAt(x, y, color)
-
-            self.drawCellAt(x, y, energy=bot.energy)
+        for bot, x, y in map.iterate_members():
+            self.drawEnergyCellAt(x, y, bot.energy)
+            #self.drawEnergyGrayCellAt(x, y, bot.energy)
 
 
 class Qwidget(QWidget):
-
     def __init__(self):
         super(Qwidget, self).__init__()
         # self.size = size
@@ -120,12 +127,13 @@ class Qwidget(QWidget):
         self.timer.start()
 
     def tick(self):
-        # self.view.clear_scene()
+        self.view.clear_scene()
         test = self.world.cycle()
-        # self.view.set_scene(self.world._map)
-        # self.view.set_scene_bots(self.world._map)
-        self.label.setText(test)
+        #self.view.set_scene(self.world._map)
+        self.view.set_scene_bots(self.world._map)
+        # self.view.set_scene_rainbow(self.world._map)
         # self.view.set_scene_energy(self.world._map)
+        self.label.setText(test)
 
 app = QApplication(sys.argv)
 # gol = GameOfLifeApp()
