@@ -1,11 +1,12 @@
 from random import randrange, randint, choice
 
-EAT_MINERAL = 10
-GET_ENERGY = 23
-CREATE_COPY = 55
-LOOK_AROUND = 29
-MOVE = 31
-EAT_ANOTHER_BOT = 63
+EAT_MINERAL = 00
+SHARE_ENERGY = 1
+GET_ENERGY = 11
+CREATE_COPY = 22
+LOOK_AROUND = 33
+MOVE = 44
+EAT_ANOTHER_BOT = 55
 
 __evolution_probability__ = 4
 __life_length__ = 100
@@ -118,7 +119,7 @@ class Bot(object):
             self._map.add_member_in_pos(child, coord_x, coord_y)
             if self._predator:
                 child._predator = True
-                child.sun_rate = 0
+                child.sun_rate = 0.4
             else:
                 child.sun_rate += choice(sun_rates_diff)
             child._move_cost = self._move_cost
@@ -210,6 +211,8 @@ class Bot(object):
             self.move_with_spin(x, y)
         elif cmd == EAT_ANOTHER_BOT:
             self.eat_another_bot(x, y)
+        elif cmd == SHARE_ENERGY:
+            self.share_energy_with_same_kind(x, y)
         else:
             self._current_command = cmd
             self._energy -= 1
@@ -223,6 +226,26 @@ class Bot(object):
         for i in self._commands:
             if self._commands[i] == EAT_ANOTHER_BOT:
                 self._predator = True
+
+    def share_energy_with_same_kind(self, x, y):
+        possible_mate = None
+        for i in range(1, 5):
+            coord_x, coord_y = self._find_direction_cell(x, y, pointer_step=i)
+            possible_mate = self._map.at(coord_x, coord_y)
+            if isinstance(possible_mate, Bot) and possible_mate._predator == self._predator:
+                break
+        else:
+            return False
+
+        assert self._predator == possible_mate._predator
+
+        if self._energy/3 >= possible_mate._energy:
+            one_third = self._energy/3
+            self._energy -= one_third
+            possible_mate._energy += one_third
+            return True
+
+        return False
 
 # TODO: Implement running out of predators
 # TODO: Implement following the victim
