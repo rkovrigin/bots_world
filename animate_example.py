@@ -127,13 +127,14 @@ class Qwidget(QWidget):
         self.timer.start()
 
     def tick(self):
-        self.view.clear_scene()
-        test = self.world.cycle()
+        text, cycle = self.world.cycle()
         #self.view.set_scene(self.world._map)
-        self.view.set_scene_bots(self.world._map)
+        if cycle % 4 == 0:
+            self.view.clear_scene()
+            self.view.set_scene_bots(self.world._map)
         # self.view.set_scene_rainbow(self.world._map)
         # self.view.set_scene_energy(self.world._map)
-        self.label.setText(test)
+        self.label.setText(text)
 
 app = QApplication(sys.argv)
 # gol = GameOfLifeApp()

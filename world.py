@@ -37,7 +37,7 @@ class World(object):
 
         self._cycle += 1
         loop = self._map.get_bots_amount()
-        return "Cycle: %d; Day: %d; Population: %s; Sun rate: %f" % (self._cycle, self._date, loop, sun_rate)
+        return "Cycle: %d; Day: %d; Population: %s; Sun rate: %f" % (self._cycle, self._date, loop, sun_rate), self._cycle
 
     def print_bots(self):
         pass
