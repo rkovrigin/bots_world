@@ -226,3 +226,4 @@ class Bot(object):
 
 # TODO: Implement running out of predators
 # TODO: Implement following the victim
+# TODO: Share energy with same kind
