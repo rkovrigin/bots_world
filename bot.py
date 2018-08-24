@@ -43,7 +43,7 @@ class Bot(object):
         self._is_alive = True
         self._move_cost = randrange(1, 5)
         self._current_command = 0
-        self._max_age = randrange(70, 100)
+        self._max_age = randrange(70, 1000)
         self._predator = predator
         self._map = map
         if self._predator:
@@ -53,16 +53,7 @@ class Bot(object):
 
         if copy_commands is None:  # TODO: add random numbers
             for i in range(self._size):
-                r = randrange(0, 3)
-                if r == 0:
-                    self._commands[i] = GET_ENERGY
-                elif r == 1:
-                    self._commands[i] = randrange(0, 64)
-                else:
-                    if randrange(0, 2) == 0:
-                        self._commands[i] = CREATE_COPY
-                    else:
-                        self._commands[i] = MOVE
+                self._commands[i] = randrange(0, 64)
         else:
             self._commands = copy_commands[:]
 
@@ -175,7 +166,11 @@ class Bot(object):
             if possible_victim._predator:
                 return False
 
-            # if self._energy <= 40 and self._energy >= possible_victim._energy:
+            # TODO: Find out correct rule for that
+            # if self._energy <= 40 and self._energy < possible_victim._energy/10:
+            #     return False
+
+            # if self._energy < possible_victim._energy/10 or self._age < possible_victim._age:
             #     return False
 
             self._energy += possible_victim._energy
