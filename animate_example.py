@@ -7,30 +7,28 @@ import sys
 from bot import Bot
 from world import World
 
-DEFAULT_UNIV_X = 200
-DEFAULT_UNIV_Y = 100
-BOTS_AT_BEGINNING = 10
-SCALE = 5
-
 
 class UniverseView(QGraphicsView):
-    def __init__(self):
+    def __init__(self, x, y, scale):
         QGraphicsView.__init__(self)
+        self._x = x
+        self._y = y
+        self._scale = scale
         self.scene = QGraphicsScene()
         self.setScene(self.scene)
-        self.drawUniverse(DEFAULT_UNIV_X, DEFAULT_UNIV_Y)
+        self.drawUniverse(x, y)
 
     def drawUniverse(self, rows, columns):
-        self.scene.setSceneRect(QRectF(0, 0, rows*SCALE, columns*SCALE))
+        self.scene.setSceneRect(QRectF(0, 0, rows*self._scale, columns*self._scale))
 
         for x in range(rows):
-            self.scene.addLine(x*SCALE, 0, x*SCALE, columns*SCALE, QPen(Qt.black))
+            self.scene.addLine(x*self._scale, 0, x*self._scale, columns*self._scale, QPen(Qt.black))
 
         for y in range(columns):
-            self.scene.addLine(0, y*SCALE, rows*SCALE, y*SCALE, QPen(Qt.black))
+            self.scene.addLine(0, y*self._scale, rows*self._scale, y*self._scale, QPen(Qt.black))
 
     def drawCellAt(self, x, y, color=Qt.black):
-        item = QGraphicsRectItem(x*SCALE, y*SCALE, SCALE, SCALE)
+        item = QGraphicsRectItem(x*self._scale, y*self._scale, self._scale, self._scale)
         item.setBrush(QBrush(color))
         self.scene.addItem(item)
 
@@ -52,7 +50,7 @@ class UniverseView(QGraphicsView):
         self.drawCellAt(x, y, color)
 
     def drawEnergyGrayCellAt(self, x, y, energy):
-        item = QGraphicsRectItem(x*SCALE, y*SCALE, SCALE, SCALE)
+        item = QGraphicsRectItem(x*self._scale, y*self._scale, self._scale, self._scale)
         x = max(0, 255-energy)
         item.setBrush(QColor(x, x, x))
         self.scene.addItem(item)
@@ -61,8 +59,8 @@ class UniverseView(QGraphicsView):
         self.scene.clear()
 
     def random_scene(self):
-        for i in range(DEFAULT_UNIV_X):
-            for j in range(DEFAULT_UNIV_Y):
+        for i in range(self._x):
+            for j in range(self._y):
                 if not random.randrange(100) % 2:
                     self.drawCellAt(i, j)
 
@@ -95,11 +93,14 @@ class UniverseView(QGraphicsView):
 
 
 class Qwidget(QWidget):
-    def __init__(self):
+    def __init__(self, x, y, scale):
         super(Qwidget, self).__init__()
+        self._x = x
+        self._y = y
+        self._scale = scale
         # self.size = size
         self.game = None
-        self.world = World(DEFAULT_UNIV_X, DEFAULT_UNIV_Y, BOTS_AT_BEGINNING)
+        # self.world = World(DEFAULT_UNIV_X, DEFAULT_UNIV_Y, BOTS_AT_BEGINNING)
         self.label = QLabel()
         self.initUI()
         self.show()
@@ -111,7 +112,7 @@ class Qwidget(QWidget):
         self.comboBox = QComboBox()
         self.comboBox.currentTextChanged.connect(self.select)
 
-        self.view = UniverseView()
+        self.view = UniverseView(self._x, self._x, self._scale)
         self.layout().addWidget(self.view)
 
         self.item = None
@@ -128,16 +129,9 @@ class Qwidget(QWidget):
 
     def tick(self):
         self.view.clear_scene()
-        test = self.world.cycle()
+        # test = self.world.cycle()
         #self.view.set_scene(self.world._map)
-        self.view.set_scene_bots(self.world._map)
+        # self.view.set_scene_bots(self.world._map)
         # self.view.set_scene_rainbow(self.world._map)
         # self.view.set_scene_energy(self.world._map)
-        self.label.setText(test)
-
-app = QApplication(sys.argv)
-# gol = GameOfLifeApp()
-# gol.show()
-
-w = Qwidget()
-app.exec_()
+        # self.label.setText(test)

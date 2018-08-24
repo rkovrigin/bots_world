@@ -1,22 +1,18 @@
-from time import sleep
+import sys
+from PyQt5.QtWidgets import QApplication
+from animate_example import Qwidget
 from world import World
 
+DEFAULT_UNIV_X = 200
+DEFAULT_UNIV_Y = 100
+BOTS_AT_BEGINNING = 10
+SCALE = 5
 
 def main():
-    world = World(10, 10, 10)
-    world.show()
-    world.cycle()
-    # world.show()
-    world.print_bots()
-    world._map.print_manual()
-    world._map.print_2d()
-    world.show()
-
-    # for i in range(10):
-    #     world.show()
-    #     world.diag_shake()
-    #     sleep(0.2)
-
+    app = QApplication(sys.argv)
+    widget = Qwidget(DEFAULT_UNIV_X, DEFAULT_UNIV_Y, SCALE)
+    world = World(DEFAULT_UNIV_X, DEFAULT_UNIV_Y, SCALE)
+    app.exec_()
 
 if __name__ == "__main__":
     main()
