@@ -114,6 +114,7 @@ class Qwidget(QWidget):
         self.view = UniverseView()
         self.layout().addWidget(self.view)
 
+
         self.item = None
         self.timer = QTimer()
         self.timer.setInterval(1)
@@ -127,14 +128,15 @@ class Qwidget(QWidget):
         self.timer.start()
 
     def tick(self):
-        text, cycle = self.world.cycle()
+        to_print = self.world.cycle()
         #self.view.set_scene(self.world._map)
-        if cycle % 4 == 0:
+        if to_print.cycle % 4 == 0:
             self.view.clear_scene()
             self.view.set_scene_bots(self.world._map)
-        # self.view.set_scene_rainbow(self.world._map)
+            #self.view.set_scene_rainbow(self.world._map)
         # self.view.set_scene_energy(self.world._map)
-        self.label.setText(text)
+        self.label.setText("Cycle: %d, Day: %d, Sun rate: %d, Population: %d" %
+                           (to_print.cycle, to_print.day, to_print.sun_rate, to_print.population))
 
 app = QApplication(sys.argv)
 # gol = GameOfLifeApp()
