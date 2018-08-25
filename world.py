@@ -1,6 +1,7 @@
 import copy
 from random import randrange
 from threading import Thread
+from time import sleep
 
 from map import Map
 from bot import Bot
@@ -23,8 +24,8 @@ class World(Thread):
         self._set_bots_randomly(init_bot_amount)
         self.queue = queue
 
-    def _set_bots_randomly(self, b):
-        for i in range(b):
+    def _set_bots_randomly(self, bot_amount):
+        for i in range(bot_amount):
             self._map.add_member_in_rand(Bot(self._map))
 
     def run(self):

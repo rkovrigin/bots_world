@@ -103,7 +103,7 @@ class Bot(object):
         return next_cmd
 
     def create_copy(self, x, y, mutate=False):
-        if self._map.get_bots_amount() > 1000:
+        if self._map.get_bots_amount() >= 5000:
             return
 
         for i in range(1, 5):
