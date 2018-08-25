@@ -1,3 +1,5 @@
+from threading import Thread
+
 from PyQt5.QtWidgets import *
 from PyQt5.QtCore import *
 from PyQt5.QtGui import *
@@ -93,13 +95,14 @@ class UniverseView(QGraphicsView):
 
 
 class Qwidget(QWidget):
-    def __init__(self, x, y, scale):
+    def __init__(self, queue, x, y, scale):
         super(Qwidget, self).__init__()
         self._x = x
         self._y = y
         self._scale = scale
         # self.size = size
         self.game = None
+        self.queue = queue
         # self.world = World(DEFAULT_UNIV_X, DEFAULT_UNIV_Y, BOTS_AT_BEGINNING)
         self.label = QLabel()
         self.initUI()
@@ -117,7 +120,7 @@ class Qwidget(QWidget):
 
         self.item = None
         self.timer = QTimer()
-        self.timer.setInterval(1)
+        self.timer.setInterval(100)
         self.timer.timeout.connect(self.tick)
         self.layout().addWidget(self.label)
         self.select()
@@ -131,7 +134,11 @@ class Qwidget(QWidget):
         self.view.clear_scene()
         # test = self.world.cycle()
         #self.view.set_scene(self.world._map)
-        # self.view.set_scene_bots(self.world._map)
+        if not self.queue.empty():
+            map = self.queue.get()
+            self.view.set_scene_bots(map)
+        else:
+            print("Queue is empty")
         # self.view.set_scene_rainbow(self.world._map)
         # self.view.set_scene_energy(self.world._map)
         # self.label.setText(test)
