@@ -18,6 +18,8 @@ def main():
 
     world.start()
     app.exec_()
+    # print(queue.qsize())
+
 
 if __name__ == "__main__":
     main()

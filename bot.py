@@ -1,3 +1,4 @@
+from collections import namedtuple
 from random import randrange, randint, choice
 
 EAT_MINERAL = 00
@@ -16,6 +17,8 @@ MASK = 0b111111
 get_cells_around_list = ((-1, -1), (1, 1), (1, -1), (-1, 1), (-1, 0), (1, 0), (0, -1), (0, 1))
 
 sun_rates_diff = list((i/100 for i in range(-10, 11)))
+
+Bot_short_info = namedtuple("Bot_short_info", ["x", "y", "predator", "energy", "age"])
 
 # TODO: Implement sharing of energy with kind. Same kind - similar except 1 bit or 1 command
 # TODO: Remember the best bots depending on these values:
@@ -103,8 +106,8 @@ class Bot(object):
         return next_cmd
 
     def create_copy(self, x, y, mutate=False):
-        if self._map.get_bots_amount() >= 5000:
-            return
+        # if self._map.get_bots_amount() >= 5000:
+        #     return
 
         for i in range(1, 5):
             coord_x, coord_y = self._find_direction_cell(x, y, pointer_step=i)

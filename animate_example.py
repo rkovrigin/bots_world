@@ -88,6 +88,15 @@ class UniverseView(QGraphicsView):
 
         #self.drawUniverse(DEFAULT_UNIV_X, DEFAULT_UNIV_Y)
 
+    def set_scene_bots_short(self, bots_list):
+        for bot in bots_list:
+            if bot.predator:
+                self.drawCellAt(bot.x, bot.y, Qt.red)
+            elif bot.age < 50:
+                self.drawCellAt(bot.x, bot.y, Qt.green)
+            else:
+                self.drawCellAt(bot.x, bot.y, Qt.darkGreen)
+
     def set_scene_energy(self, map):
         for bot, x, y in map.iterate_members():
             self.drawEnergyCellAt(x, y, bot.energy)
@@ -120,7 +129,7 @@ class Qwidget(QWidget):
 
         self.item = None
         self.timer = QTimer()
-        self.timer.setInterval(100)
+        self.timer.setInterval(1)
         self.timer.timeout.connect(self.tick)
         self.layout().addWidget(self.label)
         self.select()
@@ -134,15 +143,14 @@ class Qwidget(QWidget):
         self.view.clear_scene()
         # test = self.world.cycle()
         #self.view.set_scene(self.world._map)
-        # if not self.queue.empty():
-        try:
-            map = self.queue.get_nowait()
-        except:
-            return
-        self.view.set_scene_bots(map)
-        # self.label.setText("Bots: %d" % (map.get_bots_amount()))
-        self.label.setText("Bots: %d; Queue: %d" %(map.get_bots_amount(), self.queue.qsize()))
-        del map
+        if not self.queue.empty():
+            map = self.queue.get()
+            self.view.set_scene_bots_short(map)
+            # self.label.setText("Bots: %d" % (map.get_bots_amount()))
+            self.label.setText("Bots: %d; Queue: %d" %(len(map), self.queue.qsize()))
+            del map
+        else:
+            print("SHIIIIIIIIIT")
         # else:
         #     print("Queue is empty")
         # self.view.set_scene_rainbow(self.world._map)
