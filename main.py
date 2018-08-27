@@ -1,4 +1,6 @@
 import sys
+import time
+
 from PyQt5.QtWidgets import QApplication
 from animate_example import Qwidget
 from world import World
@@ -12,11 +14,14 @@ SCALE = 5
 
 def main():
     queue = Queue(maxsize=100)
-    app = QApplication(sys.argv)
-    widget = Qwidget(queue, DEFAULT_UNIV_X, DEFAULT_UNIV_Y, SCALE)
     world = World(queue, DEFAULT_UNIV_X, DEFAULT_UNIV_Y, BOTS_AT_BEGINNING)
 
     world.start()
+    while queue.empty():
+        time.sleep(1)
+
+    app = QApplication(sys.argv)
+    widget = Qwidget(queue, DEFAULT_UNIV_X, DEFAULT_UNIV_Y, SCALE)
     app.exec_()
     # print(queue.qsize())
 

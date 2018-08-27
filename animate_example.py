@@ -143,14 +143,13 @@ class Qwidget(QWidget):
         self.view.clear_scene()
         # test = self.world.cycle()
         #self.view.set_scene(self.world._map)
-        if not self.queue.empty():
-            map = self.queue.get()
-            self.view.set_scene_bots_short(map)
-            # self.label.setText("Bots: %d" % (map.get_bots_amount()))
-            self.label.setText("Bots: %d; Queue: %d" %(len(map), self.queue.qsize()))
-            del map
-        else:
-            print("SHIIIIIIIIIT")
+        # if not self.queue.empty():
+        map = self.queue.get()
+        self.view.set_scene_bots_short(map)
+        # self.label.setText("Bots: %d" % (map.get_bots_amount()))
+        self.label.setText("Bots: %d; Queue: %d" %(len(map), self.queue.qsize())) #qsize locks the process for (0.5-1.5)% of time
+        # self.label.setText("Bots: %d" %(len(map)))
+        del map
         # else:
         #     print("Queue is empty")
         # self.view.set_scene_rainbow(self.world._map)
