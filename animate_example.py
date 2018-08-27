@@ -147,7 +147,15 @@ class Qwidget(QWidget):
         map = self.queue.get()
         self.view.set_scene_bots_short(map)
         # self.label.setText("Bots: %d" % (map.get_bots_amount()))
-        self.label.setText("Bots: %d; Queue: %d" %(len(map), self.queue.qsize())) #qsize locks the process for (0.5-1.5)% of time
+        predators = 0
+        vegans = 0
+        for bot in map:
+            if bot.predator:
+                predators += 1
+            else:
+                vegans += 1
+        self.label.setText("Bots: %d; Queue: %d; Vegans: %d, Predators %d"
+                           %(len(map), self.queue.qsize(), vegans, predators)) #qsize locks the process for (0.5-1.5)% of time
         # self.label.setText("Bots: %d" %(len(map)))
         del map
         # else:
