@@ -37,7 +37,7 @@ class Bot(object):
     __slots__ = ["_mutant", "_energy", "_size", "_commands", "_age", "_is_alive", "_move_cost", "_current_command",
                  "_max_age", "_predator", "sun_rate", "_map"]
 
-    def __init__(self, map, energy=10, mutant=False, copy_commands=None, predator=False):
+    def __init__(self, map, energy=100, mutant=False, copy_commands=None, predator=False):
         self._mutant = mutant
         self._energy = energy
         self._size = 64
@@ -46,7 +46,7 @@ class Bot(object):
         self._is_alive = True
         self._move_cost = randrange(1, 5)
         self._current_command = 0
-        self._max_age = randrange(40, 70)
+        self._max_age = randrange(70, 200)
         self._predator = predator
         self._map = map
         if self._predator:
@@ -56,16 +56,7 @@ class Bot(object):
 
         if copy_commands is None:  # TODO: add random numbers
             for i in range(self._size):
-                r = randrange(0, 3)
-                if r == 0:
-                    self._commands[i] = GET_ENERGY
-                elif r == 1:
-                    self._commands[i] = randrange(0, 64)
-                else:
-                    if randrange(0, 2) == 0:
-                        self._commands[i] = CREATE_COPY
-                    else:
-                        self._commands[i] = MOVE
+                self._commands[i] = randrange(0, 64)
         else:
             self._commands = copy_commands[:]
 
@@ -106,7 +97,6 @@ class Bot(object):
         return next_cmd
 
     def create_copy(self, x, y, mutate=False):
-        # if self._map.get_bots_amount() >= 5000:
         #     return
 
         for i in range(1, 5):
@@ -166,13 +156,24 @@ class Bot(object):
     def eat_another_bot(self, x, y):  # TODO: takes 73% of time, save bots in map
         coord_x, coord_y = self._find_direction_cell(x, y)
 
-        possible_victim = self._map.at(coord_x, coord_y)
+        for i in range(1, 5):
+            coord_x, coord_y = self._find_direction_cell(x, y, pointer_step=i)
+            possible_victim = self._map.at(coord_x, coord_y)
+            if possible_victim is not None and isinstance(possible_victim, Bot) and possible_victim._predator == False:
+                break
+        else:
+            return False
+
         if isinstance(possible_victim, Bot):
             if possible_victim._predator:
                 return False
 
-            if self._energy <= 40 and self._energy <= possible_victim._energy:
-                return False
+            # TODO: Find out correct rule for that
+            # if self._energy <= 40 and self._energy < possible_victim._energy/10:
+            #     return False
+
+            # if self._energy < possible_victim._energy/10 or self._age < possible_victim._age:
+            #     return False
 
             self._energy += possible_victim._energy
             possible_victim.die("EATEN BY PREDATOR REASON")
@@ -200,7 +201,10 @@ class Bot(object):
         cmd = self._commands[self._current_command]
 
         if cmd == GET_ENERGY:
-            self.receive_energy(self._map.sun_rate)
+            if self._predator:
+                self.eat_another_bot(x, y)
+            else:
+                self.receive_energy(self._map.sun_rate)
         elif cmd == CREATE_COPY:
             mutate = False
             if randint(0, 3) == 0:
@@ -218,7 +222,7 @@ class Bot(object):
             self.share_energy_with_same_kind(x, y)
         else:
             self._current_command = cmd
-            self._energy -= 1
+            # self._energy -= 1
             # TODO: spend energy even if did nothing
 
     def _mutate(self):
@@ -231,7 +235,6 @@ class Bot(object):
                 self._predator = True
 
     def share_energy_with_same_kind(self, x, y):
-        possible_mate = None
         for i in range(1, 5):
             coord_x, coord_y = self._find_direction_cell(x, y, pointer_step=i)
             possible_mate = self._map.at(coord_x, coord_y)

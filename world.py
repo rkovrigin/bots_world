@@ -5,6 +5,9 @@ from time import sleep
 
 from map import Map
 from bot import Bot, Bot_short_info
+from map import Map
+from bot import Bot
+from collections import namedtuple
 
 #  TODO: create map as a tor, bots from the right side appear on the left side and vice versa
 SUN_RATE = 10
@@ -12,6 +15,8 @@ DAYS_IN_MONTH = 30
 MONTHS = 12
 
 sun_rates = [4, 4, 5, 6, 7, 8, 9, 7, 6, 4, 5, 3, 2]
+
+Data = namedtuple("Data", ["cycle", "day", "population", "sun_rate"])
 
 
 class World(Thread):

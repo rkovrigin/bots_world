@@ -127,6 +127,7 @@ class Qwidget(QWidget):
         self.view = UniverseView(self._x, self._x, self._scale)
         self.layout().addWidget(self.view)
 
+
         self.item = None
         self.timer = QTimer()
         self.timer.setInterval(1)
