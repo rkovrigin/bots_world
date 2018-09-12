@@ -34,7 +34,7 @@ class Bot(object):
     __slots__ = ["_mutant", "_energy", "_size", "_commands", "_age", "_is_alive", "_move_cost", "_current_command",
                  "_max_age", "_predator", "sun_rate", "_map"]
 
-    def __init__(self, map, energy=10, mutant=False, copy_commands=None, predator=False):
+    def __init__(self, map, energy=100, mutant=False, copy_commands=None, predator=False):
         self._mutant = mutant
         self._energy = energy
         self._size = 64
@@ -43,7 +43,7 @@ class Bot(object):
         self._is_alive = True
         self._move_cost = randrange(1, 5)
         self._current_command = 0
-        self._max_age = randrange(70, 1000)
+        self._max_age = randrange(70, 200)
         self._predator = predator
         self._map = map
         if self._predator:
