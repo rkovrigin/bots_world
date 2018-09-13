@@ -50,9 +50,13 @@ from PyQt5.QtCore import QPointF, QRect, QRectF, Qt, QTimer
 from PyQt5.QtGui import (QBrush, QColor, QFont, QLinearGradient, QPainter,
         QPen, QSurfaceFormat)
 from PyQt5.QtWidgets import (QApplication, QGridLayout, QLabel, QOpenGLWidget,
-                             QWidget, QPushButton, QCheckBox)
+                             QWidget, QPushButton, QCheckBox, QGroupBox, QRadioButton, QVBoxLayout)
 
-COLORFUL = True
+PRINT_STYLE = {
+    0 : "Green/Red",
+    1 : "Green/Red energy",
+    2 : "No color"
+}
 
 
 class Helper(object):
@@ -71,18 +75,41 @@ class Helper(object):
             else:
                 self.drawRect(painter, bot.x, bot.y, Qt.darkGreen)
 
+    def set_scene_transparency(self, painter, map):
+        for bot in map:
+            if bot.energy > 255:
+                transparancy = 255
+            elif bot.energy < 100:
+                transparancy = 100
+            else:
+                transparancy = bot.energy
+
+            if bot.predator:
+                color = QColor(255, 0, 0, transparancy)
+            else:
+                color = QColor(0, 255, 0, transparancy)
+
+            self.drawRect(painter, bot.x, bot.y, color)
+
+    def set_scene_no_color(self, painter, map):
+        for bot in map:
+            self.drawRect(painter, bot.x, bot.y, None)
+
     def drawRect(self, painter, x, y, color):
-        global COLORFUL
-        if COLORFUL is True:
+        if color is not None:
             painter.setBrush(color)
         painter.drawRect(x*self._scale, y*self._scale, self._scale, self._scale)
 
-    def paint(self, painter, event, map):
+    def paint(self, painter, event, map, print_style):
         painter.fillRect(event.rect(), self.background)
         painter.save()
 
-        self.set_scene(painter, map)
-        # painter.drawText(QRect(0, self._y * self._scale, 100, 100), Qt.AlignCenter, "Bots: %s" % (len(map)))
+        if print_style == PRINT_STYLE[0]:
+            self.set_scene(painter, map)
+        elif print_style == PRINT_STYLE[1]:
+            self.set_scene_transparency(painter, map)
+        elif print_style == PRINT_STYLE[2]:
+            self.set_scene_no_color(painter, map)
 
         painter.restore()
 
@@ -98,6 +125,7 @@ class GLWidget(QOpenGLWidget):
         self._scale = scale
         self._queue = queue
         self._label = label
+        self._print_style = PRINT_STYLE[0]
         self.setFixedSize(x*scale, y*scale)
         self.setAutoFillBackground(False)
 
@@ -111,7 +139,7 @@ class GLWidget(QOpenGLWidget):
         painter.setRenderHint(QPainter.Antialiasing)
         map = self._queue.get()
         self._label.setText("Frames: %d; Bots: %d" % (self._queue.qsize(), len(map)))
-        self.helper.paint(painter, event, map)
+        self.helper.paint(painter, event, map, self._print_style)
         painter.end()
 
 
@@ -124,36 +152,51 @@ class WorldWindow(QWidget):
         helper = Helper(x, y, scale)
         openGLLabel = QLabel()
         openGLLabel.setAlignment(Qt.AlignHCenter)
-        openGL = GLWidget(helper, self, queue, x, y, scale, openGLLabel)
+        self.openGL = GLWidget(helper, self, queue, x, y, scale, openGLLabel)
 
         layout = QGridLayout()
-        layout.addWidget(openGL, 0, 1)
+        layout.addWidget(self.openGL, 0, 1)
         layout.addWidget(openGLLabel, 1, 1)
         self.setLayout(layout)
 
-        self.b = QCheckBox("Show color", self)
-        self.b.stateChanged.connect(self.clickBox)
-        self.b.click()
-        layout.addWidget(self.b)
-
-        # self.b1 = QPushButton("COLOR")
-        # self.b1.clicked.connect(self.switch_color)
-        # layout.addWidget(self.b1)
+        self.button_box = self.createRadioButtonGroup()
+        layout.addWidget(self.button_box)
 
         timer = QTimer(self)
-        timer.timeout.connect(openGL.animate)
+        timer.timeout.connect(self.openGL.animate)
         timer.start(1)
 
-    # def switch_color(self):
-    #     global COLORFUL
-    #     COLORFUL = not COLORFUL
+    def createRadioButtonGroup(self):
+        groupBox = QGroupBox("View style")
+        self.radioGreenRed = QRadioButton("Green/Red")
+        self.radioGreenRed.toggled.connect(self.radioButtonColor)
+        self.radioGreenRedEnergy = QRadioButton("Green/Red energy")
+        self.radioGreenRedEnergy.toggled.connect(self.radioButtonColor)
+        self.radioNoColor = QRadioButton("No color")
+        self.radioNoColor.toggled.connect(self.radioButtonColor)
 
-    def clickBox(self, state):
-        global COLORFUL
-        if state == Qt.Checked:
-            COLORFUL = True
+        self.radioGreenRed.setChecked(True)
+        vbox = QVBoxLayout()
+        vbox.addWidget(self.radioGreenRed)
+        vbox.addWidget(self.radioGreenRedEnergy)
+        vbox.addWidget(self.radioNoColor)
+        groupBox.setLayout(vbox)
+
+        return groupBox
+
+    def radioButtonColor(self, checked=True):
+        if not checked:
+            return
+
+        if self.radioGreenRed.isChecked():
+            self.openGL._print_style = PRINT_STYLE[0]
+        elif self.radioGreenRedEnergy.isChecked():
+            self.openGL._print_style = PRINT_STYLE[1]
+        elif self.radioNoColor.isChecked():
+            self.openGL._print_style = PRINT_STYLE[2]
         else:
-            COLORFUL = False
+            raise Exception("No radio button is chosen")
+
 
 if __name__ == '__main__':
 
