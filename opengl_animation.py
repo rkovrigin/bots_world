@@ -50,7 +50,9 @@ from PyQt5.QtCore import QPointF, QRect, QRectF, Qt, QTimer
 from PyQt5.QtGui import (QBrush, QColor, QFont, QLinearGradient, QPainter,
         QPen, QSurfaceFormat)
 from PyQt5.QtWidgets import (QApplication, QGridLayout, QLabel, QOpenGLWidget,
-        QWidget)
+                             QWidget, QPushButton, QCheckBox)
+
+COLORFUL = True
 
 
 class Helper(object):
@@ -70,7 +72,9 @@ class Helper(object):
                 self.drawRect(painter, bot.x, bot.y, Qt.darkGreen)
 
     def drawRect(self, painter, x, y, color):
-        painter.setBrush(color)
+        global COLORFUL
+        if COLORFUL is True:
+            painter.setBrush(color)
         painter.drawRect(x*self._scale, y*self._scale, self._scale, self._scale)
 
     def paint(self, painter, event, map):
@@ -127,10 +131,29 @@ class WorldWindow(QWidget):
         layout.addWidget(openGLLabel, 1, 1)
         self.setLayout(layout)
 
+        self.b = QCheckBox("Show color", self)
+        self.b.stateChanged.connect(self.clickBox)
+        self.b.click()
+        layout.addWidget(self.b)
+
+        # self.b1 = QPushButton("COLOR")
+        # self.b1.clicked.connect(self.switch_color)
+        # layout.addWidget(self.b1)
+
         timer = QTimer(self)
         timer.timeout.connect(openGL.animate)
-        timer.start(50)
+        timer.start(1)
 
+    # def switch_color(self):
+    #     global COLORFUL
+    #     COLORFUL = not COLORFUL
+
+    def clickBox(self, state):
+        global COLORFUL
+        if state == Qt.Checked:
+            COLORFUL = True
+        else:
+            COLORFUL = False
 
 if __name__ == '__main__':
 

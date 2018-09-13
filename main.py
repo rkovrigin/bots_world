@@ -15,7 +15,7 @@ BOTS_AT_BEGINNING = 100
 SCALE = 6
 
 def main():
-    queue = Queue(maxsize=100)
+    queue = Queue(maxsize=1000)
     world = World(queue, DEFAULT_UNIV_X, DEFAULT_UNIV_Y, BOTS_AT_BEGINNING)
 
     world.start()
@@ -35,7 +35,7 @@ def main():
 
     window = WorldWindow(queue, DEFAULT_UNIV_X, DEFAULT_UNIV_Y, SCALE)
     window.show()
-    sys.exit(app.exec_())
+    app.exec_()
 
 
 if __name__ == "__main__":

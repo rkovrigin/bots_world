@@ -29,14 +29,14 @@ class World(Thread):
         self._set_bots_randomly(init_bot_amount)
         self.queue = queue
 
-        self.stop_key = True
+        self._run = True
 
     def _set_bots_randomly(self, bot_amount):
         for i in range(bot_amount):
             self._map.add_member_in_rand(Bot(self._map))
 
     def run(self):
-        while True:
+        while self._run:
             if self._map.get_bots_amount() == 0:
                 self._set_bots_randomly(self._init_bot_amount)
 
