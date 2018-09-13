@@ -34,8 +34,8 @@ how many bots has eaten
 
 
 class Bot(object):
-    __slots__ = ["_mutant", "_energy", "_size", "_commands", "_age", "_is_alive", "_move_cost", "_current_command",
-                 "_max_age", "_predator", "sun_rate", "_map"]
+    __slots__ = ["_mutant", "_energy", "_size", "_commands", "_age", "_is_alive", "_move_cost", "_day_cost",
+                 "_current_command", "_max_age", "_predator", "sun_rate", "_map"]
 
     def __init__(self, map, energy=100, mutant=False, copy_commands=None, predator=False):
         self._mutant = mutant
@@ -49,12 +49,14 @@ class Bot(object):
         self._max_age = randrange(70, 200)
         self._predator = predator
         self._map = map
+        self._day_cost = 0
+
         if self._predator:
             self.sun_rate = 0
         else:
             self.sun_rate = choice((0.9, 1.0))
 
-        if copy_commands is None:  # TODO: add random numbers
+        if copy_commands is None:
             for i in range(self._size):
                 self._commands[i] = randrange(0, 64)
         else:
@@ -97,7 +99,6 @@ class Bot(object):
         return next_cmd
 
     def create_copy(self, x, y, mutate=False):
-        #     return
 
         for i in range(1, 5):
             coord_x, coord_y = self._find_direction_cell(x, y, pointer_step=i)
@@ -153,9 +154,7 @@ class Bot(object):
     def look_around(self):
         pass
 
-    def eat_another_bot(self, x, y):  # TODO: takes 73% of time, save bots in map
-        coord_x, coord_y = self._find_direction_cell(x, y)
-
+    def eat_another_bot(self, x, y):
         for i in range(1, 5):
             coord_x, coord_y = self._find_direction_cell(x, y, pointer_step=i)
             possible_victim = self._map.at(coord_x, coord_y)
@@ -169,7 +168,7 @@ class Bot(object):
                 return False
 
             # TODO: Find out correct rule for that
-            # if self._energy <= 40 and self._energy < possible_victim._energy/10:
+            # if self._energy < possible_victim._energy/4:
             #     return False
 
             # if self._energy < possible_victim._energy/10 or self._age < possible_victim._age:
@@ -222,8 +221,7 @@ class Bot(object):
             self.share_energy_with_same_kind(x, y)
         else:
             self._current_command = cmd
-            # self._energy -= 1
-            # TODO: spend energy even if did nothing
+            self._energy -= self._day_cost
 
     def _mutate(self):
         rand_nmb = randint(0, self.size - 1)
@@ -255,4 +253,3 @@ class Bot(object):
 
 # TODO: Implement running out of predators
 # TODO: Implement following the victim
-# TODO: Share energy with same kind
