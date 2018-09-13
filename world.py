@@ -50,15 +50,11 @@ class World(Thread):
                 self._date += 1
 
             self._cycle += 1
-            # loop = self._map.get_bots_amount()
+
             bots_list = []
             for bot, x, y in self._map.iterate_members():
                 bot_info = Bot_short_info(x, y, bot._predator, bot.energy, bot.age)
                 bots_list.append(bot_info)
-            # dict_copy = copy.deepcopy(self._map)
+
             self.queue.put(bots_list)
-                # self.stop_key = False
-                # if self.queue.empty():
-                #     self.stop_key = True
-                # return "Cycle: %d; Day: %d; Population: %s; Sun rate: %f" % (self._cycle, self._date, loop, sun_rate)
 
