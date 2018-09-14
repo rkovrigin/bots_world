@@ -63,6 +63,16 @@ PRINT_STYLE = {
     4 : "Energy",
 }
 
+TRANSPARENCY = 255
+
+RED  = QColor(0xff, 0, 0, TRANSPARENCY)
+BLUE = QColor(0x00, 0x00, 0xff, TRANSPARENCY)
+GREEN = QColor(0x00, 0xff, 0x00, TRANSPARENCY)
+YELLOW = QColor(0xff, 0xd5, 0, TRANSPARENCY)
+ORANGE = QColor(0xff, 0x91, 0, TRANSPARENCY)
+LIGHT_BLUE = QColor(0x00, 0xff, 0xff, TRANSPARENCY)
+PURPLE = color = QColor(0xb7, 0x00, 0xff, TRANSPARENCY)
+GRAY = QColor(0x7a, 0x7a, 0x7a, TRANSPARENCY)
 
 class Helper(object):
     def __init__(self, x, y, scale):
@@ -117,18 +127,24 @@ class Helper(object):
     def set_scene_bot_kind(self, painter, map):
         for member in map:
             if isinstance(member, Bot_short_info):
-                if member.energy > 255:
-                    transparancy = 255
-                elif member.energy < 100:
-                    transparancy = 100
+                if member.color == BOT_PREDATOR_KIND:
+                    color = RED
+                elif member.color == BOT_MINERAL_KIND:
+                    color = BLUE
+                elif member.color == BOT_VEGAN_KIND:
+                    color = GREEN
+
+                elif member.color == (BOT_PREDATOR_KIND | BOT_VEGAN_KIND):
+                    color = YELLOW
+                elif member.color == (BOT_PREDATOR_KIND | BOT_MINERAL_KIND):
+                    color = ORANGE
+                elif member.color == (BOT_VEGAN_KIND | BOT_MINERAL_KIND):
+                    color = LIGHT_BLUE
+
+                elif member.color == (BOT_PREDATOR_KIND | BOT_MINERAL_KIND | BOT_VEGAN_KIND):
+                    color = PURPLE
                 else:
-                    transparancy = member.energy
-
-                r = (member.color & BOT_PREDATOR_KIND) >> 16
-                g = (member.color & BOT_VEGAN_KIND) >> 8
-                b = member.color & BOT_MINERAL_KIND
-
-                color = QColor(r, g, b, 200)
+                    color = GRAY
 
             elif isinstance(member, Mineral_short_info):
                 if member.quantity < 50:
