@@ -184,15 +184,19 @@ class Bot(object):
         for i in range(1, 5):
             coord_x, coord_y = self._find_direction_cell(x, y, pointer_step=i)
             possible_victim = self._map.at(coord_x, coord_y)
-            if possible_victim is not None and isinstance(possible_victim, Bot) \
-                    and possible_victim.kind != BOT_PREDATOR_KIND:
-                break
+
+            if self._color == BOT_PREDATOR_KIND:
+                if possible_victim is not None and isinstance(possible_victim, Bot) and possible_victim._color != BOT_PREDATOR_KIND:
+                    break
+            elif self._color & BOT_PREDATOR_KIND:
+                if possible_victim is not None and isinstance(possible_victim, Bot) and (possible_victim._color & BOT_PREDATOR_KIND) == 0:
+                    break
         else:
             return False
 
-        if isinstance(possible_victim, Bot):
-            if possible_victim._kind == BOT_PREDATOR_KIND:
-                return False
+        # if isinstance(possible_victim, Bot):
+        #     if possible_victim._kind == BOT_PREDATOR_KIND:
+        #         return False
 
             # TODO: Find out correct rule for that
             # if self._energy < possible_victim._energy/4:
@@ -201,11 +205,9 @@ class Bot(object):
             # if self._energy < possible_victim._energy/10 or self._age < possible_victim._age:
             #     return False
 
-            self._energy += possible_victim._energy
-            possible_victim.die("EATEN BY PREDATOR REASON")
-            return True
-
-        return False
+        self._energy += possible_victim._energy
+        possible_victim.die("EATEN BY PREDATOR REASON")
+        return True
 
     def die(self, reason):
         self._is_alive = False
