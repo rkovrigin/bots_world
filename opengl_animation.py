@@ -59,7 +59,8 @@ PRINT_STYLE = {
     0 : "Green/Red",
     1 : "Green/Red energy",
     2 : "No color",
-    3 : "Multicolor"
+    3 : "Multicolor",
+    4 : "Energy",
 }
 
 
@@ -144,6 +145,24 @@ class Helper(object):
         for member in map:
             self.drawRect(painter, member.x, member.y, None)
 
+    def set_scene_energy(self, painter, map):
+        for member in map:
+            if isinstance(member, Bot_short_info):
+                if member.energy > 255:
+                    transparancy = 255
+                else:
+                    transparancy = member.energy
+
+                color = QColor(255, 255-transparancy, 0, transparancy)
+            elif isinstance(member, Mineral_short_info):
+                if member.quantity > 255:
+                    transparancy = 255
+                else:
+                    transparancy = member.quantity
+                color = QColor(0xe5, 0x69, 0xf5, transparancy)
+            self.drawRect(painter, member.x, member.y, color)
+
+
     def drawRect(self, painter, x, y, color):
         if color is not None:
             painter.setBrush(color)
@@ -161,6 +180,8 @@ class Helper(object):
             self.set_scene_no_color(painter, map)
         elif print_style == PRINT_STYLE[3]:
             self.set_scene_bot_kind(painter, map)
+        elif print_style == PRINT_STYLE[4]:
+            self.set_scene_energy(painter, map)
 
         painter.restore()
 
@@ -220,10 +241,10 @@ class WorldWindow(QWidget):
     def createRadioButtonGroup(self):
         groupBox = QGroupBox("View style")
 
-        self.radioGreenRed = QRadioButton("Green/Red")
+        self.radioGreenRed = QRadioButton("Green/Red/Blue")
         self.radioGreenRed.toggled.connect(self.radioButtonColor)
 
-        self.radioGreenRedEnergy = QRadioButton("Green/Red energy")
+        self.radioGreenRedEnergy = QRadioButton("Green/Red/Blue energy")
         self.radioGreenRedEnergy.toggled.connect(self.radioButtonColor)
 
         self.radioNoColor = QRadioButton("No color")
@@ -232,12 +253,16 @@ class WorldWindow(QWidget):
         self.radioMultiColor = QRadioButton("Multicolor")
         self.radioMultiColor.toggled.connect(self.radioButtonColor)
 
+        self.radioEnergy = QRadioButton("Energy")
+        self.radioEnergy.toggled.connect(self.radioButtonColor)
+
         self.radioGreenRed.setChecked(True)
         vbox = QVBoxLayout()
         vbox.addWidget(self.radioGreenRed)
         vbox.addWidget(self.radioGreenRedEnergy)
         vbox.addWidget(self.radioNoColor)
         vbox.addWidget(self.radioMultiColor)
+        vbox.addWidget(self.radioEnergy)
         groupBox.setLayout(vbox)
 
         return groupBox
@@ -254,6 +279,8 @@ class WorldWindow(QWidget):
             self.openGL._print_style = PRINT_STYLE[2]
         elif self.radioMultiColor.isChecked():
             self.openGL._print_style = PRINT_STYLE[3]
+        elif self.radioEnergy.isChecked():
+            self.openGL._print_style = PRINT_STYLE[4]
         else:
             raise Exception("No radio button is chosen")
 
