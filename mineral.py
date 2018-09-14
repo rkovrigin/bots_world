@@ -34,3 +34,7 @@ class Mineral(object):
             self.exhaust()
 
         return bite
+
+    def grow(self):
+        if self._quantity > 0:
+            self._quantity += 1

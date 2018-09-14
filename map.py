@@ -111,6 +111,7 @@ class Map(object):
                 del self._map[(x, y)]
 
         for member, x, y in self.iterate_members(Mineral):
+            member.grow()
             if not member._is_active:
                 del self._map[x, y]
 
