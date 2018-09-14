@@ -276,12 +276,12 @@ class Bot(object):
         for i in range(1, 5):
             coord_x, coord_y = self._find_direction_cell(x, y, pointer_step=i)
             possible_mate = self._map.at(coord_x, coord_y)
-            if isinstance(possible_mate, Bot) and possible_mate._kind == self._kind:
+            if isinstance(possible_mate, Bot) and possible_mate._color == self._color:
                 break
         else:
             return False
 
-        assert self._kind == possible_mate._kind
+        assert self._color == possible_mate._color
 
         if self._energy/3 >= possible_mate._energy:
             one_third = self._energy/3
