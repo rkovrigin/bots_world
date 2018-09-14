@@ -19,9 +19,9 @@ __life_length__ = 100
 
 MASK = 0b111111
 
-BOT_PREDATOR_KIND = 0x5a0000
-BOT_VEGAN_KIND =    0x003400
-BOT_MINERAL_KIND =  0x000080
+BOT_PREDATOR_KIND = 0xff0000
+BOT_VEGAN_KIND    = 0x003400
+BOT_MINERAL_KIND  = 0x000080
 
 get_cells_around_list = ((-1, -1), (1, 1), (1, -1), (-1, 1), (-1, 0), (1, 0), (0, -1), (0, 1))
 
@@ -81,6 +81,26 @@ class Bot(object):
         if mutant:
             self._mutate()
         self._set_kind()
+
+    def _mutate(self):
+        rand_nmb = randint(0, self.size - 1)
+        cmd = self._commands[rand_nmb]
+        new_cmd_nmb = self._invert_bit(cmd, randint(0, 5))
+        self._commands[rand_nmb] = new_cmd_nmb
+
+    def _set_kind(self):
+        for i in self._commands:
+            if self._commands[i] == EAT_ANOTHER_BOT:
+                self._kind = BOT_PREDATOR_KIND
+                self._color |= BOT_PREDATOR_KIND
+            elif self._commands[i] == EAT_MINERAL:
+                self._kind = BOT_MINERAL_KIND
+                self._color |= BOT_MINERAL_KIND
+            elif self._commands[i] == GET_ENERGY:
+                self._kind = BOT_VEGAN_KIND
+                self._color |= BOT_VEGAN_KIND
+
+        # print ("SET_KIND = %r" % hex(self._color) )
 
     @property
     def size(self):
@@ -251,25 +271,6 @@ class Bot(object):
         else:
             self._current_command = cmd
             self._energy -= self._day_cost
-
-    def _mutate(self):
-        rand_nmb = randint(0, self.size - 1)
-        cmd = self._commands[rand_nmb]
-        new_cmd_nmb = self._invert_bit(cmd, randint(0, 5))
-        self._commands[rand_nmb] = new_cmd_nmb
-
-    def _set_kind(self):
-        for i in self._commands:
-            if self._commands[i] == EAT_ANOTHER_BOT:
-                self._kind = BOT_PREDATOR_KIND
-                self._color |= BOT_PREDATOR_KIND
-            elif self._commands[i] == EAT_MINERAL:
-                self._kind = BOT_MINERAL_KIND
-                self._color |= BOT_MINERAL_KIND
-            elif self._commands[i] == GET_ENERGY:
-                self._kind = BOT_VEGAN_KIND
-                self._color |= BOT_VEGAN_KIND
-        # print ("%d %d %d" % (self._color | BOT_PREDATOR_KIND, self._color | BOT_MINERAL_KIND, self._color | BOT_VEGAN_KIND))
 
     def share_energy_with_same_kind(self, x, y):
         for i in range(1, 5):
