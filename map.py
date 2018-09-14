@@ -1,6 +1,8 @@
 from collections import defaultdict
 from random import randint, randrange
 from bot import Bot
+from mineral import Mineral
+
 
 class OutsideOfMap(object):
     pass
@@ -97,13 +99,20 @@ class Map(object):
             return outside_map
 
     def get_bots_amount(self):
-        return len(self._map)
+        amount = 0
+        for _ in self.iterate_members(Bot):
+            amount += 1
+        return amount
 
     def cycle(self):
         for member, x, y in self.iterate_members(Bot):
             member.execute_command(x, y)
             if not member.is_alive:
                 del self._map[(x, y)]
+
+        for member, x, y in self.iterate_members(Mineral):
+            if not member._is_active:
+                del self._map[x, y]
 
     #TODO: Save snapshots of actions
     def iterate_members(self, member_kind=None):

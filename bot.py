@@ -1,24 +1,33 @@
 from collections import namedtuple
 from random import randrange, randint, choice
 
+from mineral import Mineral
+
 EAT_MINERAL = 00
 SHARE_ENERGY = 1
+EAT_MINERAL = 2
 GET_ENERGY = 11
+RUNAWAY_FROM_PREDATOR = 12
 CREATE_COPY = 22
 LOOK_AROUND = 33
 MOVE = 44
 EAT_ANOTHER_BOT = 55
+FALLOW_VICTIM = 56
 
 __evolution_probability__ = 4
 __life_length__ = 100
 
 MASK = 0b111111
 
+BOT_PREDATOR_KIND = 0x5a0000
+BOT_VEGAN_KIND =    0x003400
+BOT_MINERAL_KIND =  0x000080
+
 get_cells_around_list = ((-1, -1), (1, 1), (1, -1), (-1, 1), (-1, 0), (1, 0), (0, -1), (0, 1))
 
 sun_rates_diff = list((i/100 for i in range(-10, 11)))
 
-Bot_short_info = namedtuple("Bot_short_info", ["x", "y", "predator", "energy", "age"])
+Bot_short_info = namedtuple("Bot_short_info", ["x", "y", "kind", "energy", "age", "color"])
 
 # TODO: Implement sharing of energy with kind. Same kind - similar except 1 bit or 1 command
 # TODO: Remember the best bots depending on these values:
@@ -31,13 +40,16 @@ max distance passed
 how many bots has eaten
 """
 # TODO: After that generate new generation with the best bots
+# TODO: Implement running out of predators
+# TODO: Implement following the victim
 
 
 class Bot(object):
     __slots__ = ["_mutant", "_energy", "_size", "_commands", "_age", "_is_alive", "_move_cost", "_day_cost",
-                 "_current_command", "_max_age", "_predator", "sun_rate", "_map"]
+                 "_current_command", "_max_age", "_kind", "_mineraler", "sun_rate", "_map", "_bite_mineral",
+                 "_color"]
 
-    def __init__(self, map, energy=100, mutant=False, copy_commands=None, predator=False):
+    def __init__(self, map, energy=100, mutant=False, copy_commands=None, kind=BOT_VEGAN_KIND):
         self._mutant = mutant
         self._energy = energy
         self._size = 64
@@ -47,11 +59,13 @@ class Bot(object):
         self._move_cost = randrange(1, 5)
         self._current_command = 0
         self._max_age = randrange(70, 200)
-        self._predator = predator
+        self._kind = kind
         self._map = map
+        self._color = 0
         self._day_cost = 0
+        self._bite_mineral = randrange(20, 40)
 
-        if self._predator:
+        if self._kind == BOT_PREDATOR_KIND:
             self.sun_rate = 0
         else:
             self.sun_rate = choice((0.9, 1.0))
@@ -66,14 +80,15 @@ class Bot(object):
 
         if mutant:
             self._mutate()
+        self._set_kind()
 
     @property
     def size(self):
         return self._size
 
     @property
-    def predator(self):
-        return self._predator
+    def kind(self):
+        return self._kind
 
     @property
     def is_alive(self):
@@ -109,10 +124,10 @@ class Bot(object):
 
         if self._energy >= 70:
             self._energy -= 30
-            child = Bot(self._map, energy=10, mutant=mutate, copy_commands=self._commands, predator=self._predator)
+            child = Bot(self._map, energy=10, mutant=mutate, copy_commands=self._commands, kind=self._kind)
             self._map.add_member_in_pos(child, coord_x, coord_y)
-            if self._predator:
-                child._predator = True
+            if self._kind == BOT_PREDATOR_KIND:
+                # child._kind = BOT_PREDATOR_KIND
                 child.sun_rate = 0.4
             else:
                 child.sun_rate += choice(sun_rates_diff)
@@ -148,8 +163,19 @@ class Bot(object):
         else:
             self._energy += sun_rate * self.sun_rate
 
-    def eat_mineral(self):
-        pass
+    def eat_mineral(self, x, y):
+        for i in range(1, 5):
+            coord_x, coord_y = self._find_direction_cell(x, y, pointer_step=i)
+            if isinstance(self._map.at(coord_x, coord_y), Mineral):
+                break
+        else:
+            return False
+
+        mineral = self._map.at(coord_x, coord_y)
+        bite = mineral.bite_piece(self._bite_mineral)
+        self._energy += bite
+        # print("Have bitten %d size piece at [%d:%d]" % (bite, coord_x, coord_y))
+        return True
 
     def look_around(self):
         pass
@@ -158,13 +184,14 @@ class Bot(object):
         for i in range(1, 5):
             coord_x, coord_y = self._find_direction_cell(x, y, pointer_step=i)
             possible_victim = self._map.at(coord_x, coord_y)
-            if possible_victim is not None and isinstance(possible_victim, Bot) and possible_victim._predator == False:
+            if possible_victim is not None and isinstance(possible_victim, Bot) \
+                    and possible_victim.kind != BOT_PREDATOR_KIND:
                 break
         else:
             return False
 
         if isinstance(possible_victim, Bot):
-            if possible_victim._predator:
+            if possible_victim._kind == BOT_PREDATOR_KIND:
                 return False
 
             # TODO: Find out correct rule for that
@@ -200,7 +227,7 @@ class Bot(object):
         cmd = self._commands[self._current_command]
 
         if cmd == GET_ENERGY:
-            if self._predator:
+            if self._kind == BOT_PREDATOR_KIND:
                 self.eat_another_bot(x, y)
             else:
                 self.receive_energy(self._map.sun_rate)
@@ -210,7 +237,7 @@ class Bot(object):
                 mutate = True
             self.create_copy(x, y, mutate=mutate)
         elif cmd == EAT_MINERAL:
-            self.eat_mineral()
+            self.eat_mineral(x, y)
         elif cmd == LOOK_AROUND:
             self.look_around()
         elif cmd == MOVE:
@@ -228,20 +255,30 @@ class Bot(object):
         cmd = self._commands[rand_nmb]
         new_cmd_nmb = self._invert_bit(cmd, randint(0, 5))
         self._commands[rand_nmb] = new_cmd_nmb
+
+    def _set_kind(self):
         for i in self._commands:
             if self._commands[i] == EAT_ANOTHER_BOT:
-                self._predator = True
+                self._kind = BOT_PREDATOR_KIND
+                self._color |= BOT_PREDATOR_KIND
+            elif self._commands[i] == EAT_MINERAL:
+                self._kind = BOT_MINERAL_KIND
+                self._color |= BOT_MINERAL_KIND
+            elif self._commands[i] == GET_ENERGY:
+                self._kind = BOT_VEGAN_KIND
+                self._color |= BOT_VEGAN_KIND
+        # print ("%d %d %d" % (self._color | BOT_PREDATOR_KIND, self._color | BOT_MINERAL_KIND, self._color | BOT_VEGAN_KIND))
 
     def share_energy_with_same_kind(self, x, y):
         for i in range(1, 5):
             coord_x, coord_y = self._find_direction_cell(x, y, pointer_step=i)
             possible_mate = self._map.at(coord_x, coord_y)
-            if isinstance(possible_mate, Bot) and possible_mate._predator == self._predator:
+            if isinstance(possible_mate, Bot) and possible_mate._kind == self._kind:
                 break
         else:
             return False
 
-        assert self._predator == possible_mate._predator
+        assert self._kind == possible_mate._kind
 
         if self._energy/3 >= possible_mate._energy:
             one_third = self._energy/3
@@ -251,5 +288,5 @@ class Bot(object):
 
         return False
 
-# TODO: Implement running out of predators
-# TODO: Implement following the victim
+#TODO PREDATOR EATS EVERYONE
+#TODO PREDATOR/(VEGAN||MINERAL) CAN EAT ALL EXCEPT PREDATOR and SAME KIND

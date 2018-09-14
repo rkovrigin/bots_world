@@ -52,10 +52,14 @@ from PyQt5.QtGui import (QBrush, QColor, QFont, QLinearGradient, QPainter,
 from PyQt5.QtWidgets import (QApplication, QGridLayout, QLabel, QOpenGLWidget,
                              QWidget, QPushButton, QCheckBox, QGroupBox, QRadioButton, QVBoxLayout)
 
+from bot import Bot_short_info, BOT_PREDATOR_KIND, BOT_VEGAN_KIND, BOT_MINERAL_KIND
+from mineral import Mineral_short_info
+
 PRINT_STYLE = {
     0 : "Green/Red",
     1 : "Green/Red energy",
-    2 : "No color"
+    2 : "No color",
+    3 : "Multicolor"
 }
 
 
@@ -67,33 +71,78 @@ class Helper(object):
         self._scale = scale
 
     def set_scene(self, painter, map):
-        for bot in map:
-            if bot.predator:
-                self.drawRect(painter, bot.x, bot.y, Qt.red)
-            elif bot.age < 50:
-                self.drawRect(painter, bot.x, bot.y, Qt.green)
+        for member in map:
+            if isinstance(member, Bot_short_info):
+                if member.kind == BOT_PREDATOR_KIND:
+                    self.drawRect(painter, member.x, member.y, Qt.red)
+                elif member.kind == BOT_VEGAN_KIND:
+                    self.drawRect(painter, member.x, member.y, Qt.green)
+                elif member.kind == BOT_MINERAL_KIND:
+                    self.drawRect(painter, member.x, member.y, Qt.blue)
+                else:
+                    raise Exception("No such bot kind")
+            elif isinstance(member, Mineral_short_info):
+                self.drawRect(painter, member.x, member.y, Qt.magenta)
             else:
-                self.drawRect(painter, bot.x, bot.y, Qt.darkGreen)
+                raise Exception("No such kind of object %r" % member)
 
     def set_scene_transparency(self, painter, map):
-        for bot in map:
-            if bot.energy > 255:
-                transparancy = 255
-            elif bot.energy < 100:
-                transparancy = 100
-            else:
-                transparancy = bot.energy
+        for member in map:
+            if isinstance(member, Bot_short_info):
+                if member.energy > 255:
+                    transparancy = 255
+                elif member.energy < 100:
+                    transparancy = 100
+                else:
+                    transparancy = member.energy
 
-            if bot.predator:
-                color = QColor(255, 0, 0, transparancy)
-            else:
-                color = QColor(0, 255, 0, transparancy)
+                if member.kind == BOT_PREDATOR_KIND:
+                    color = QColor(255, 0, 0, transparancy)
+                elif member.kind == BOT_VEGAN_KIND:
+                    color = QColor(0, 255, 0, transparancy)
+                elif member.kind == BOT_MINERAL_KIND:
+                    color = QColor(0, 0, 255, transparancy)
+            elif isinstance(member, Mineral_short_info):
+                if member.quantity < 50:
+                    transparancy = 50
+                elif member.quantity > 255:
+                    transparancy = 255
+                else:
+                    transparancy = member.quantity
+                color = QColor(0xf4, 72, 0xd0, transparancy)
 
-            self.drawRect(painter, bot.x, bot.y, color)
+            self.drawRect(painter, member.x, member.y, color)
+
+    def set_scene_bot_kind(self, painter, map):
+        for member in map:
+            if isinstance(member, Bot_short_info):
+                if member.energy > 255:
+                    transparancy = 255
+                elif member.energy < 100:
+                    transparancy = 100
+                else:
+                    transparancy = member.energy
+
+                r = (member.color & BOT_PREDATOR_KIND) >> 16
+                g = (member.color & BOT_VEGAN_KIND) >> 8
+                b = member.color & BOT_MINERAL_KIND
+
+                color = QColor(r, g, b, 200)
+
+            elif isinstance(member, Mineral_short_info):
+                if member.quantity < 50:
+                    transparancy = 50
+                elif member.quantity > 255:
+                    transparancy = 255
+                else:
+                    transparancy = member.quantity
+                color = QColor(0xf4, 72, 0xd0, transparancy)
+
+            self.drawRect(painter, member.x, member.y, color)
 
     def set_scene_no_color(self, painter, map):
-        for bot in map:
-            self.drawRect(painter, bot.x, bot.y, None)
+        for member in map:
+            self.drawRect(painter, member.x, member.y, None)
 
     def drawRect(self, painter, x, y, color):
         if color is not None:
@@ -110,6 +159,8 @@ class Helper(object):
             self.set_scene_transparency(painter, map)
         elif print_style == PRINT_STYLE[2]:
             self.set_scene_no_color(painter, map)
+        elif print_style == PRINT_STYLE[3]:
+            self.set_scene_bot_kind(painter, map)
 
         painter.restore()
 
@@ -168,18 +219,25 @@ class WorldWindow(QWidget):
 
     def createRadioButtonGroup(self):
         groupBox = QGroupBox("View style")
+
         self.radioGreenRed = QRadioButton("Green/Red")
         self.radioGreenRed.toggled.connect(self.radioButtonColor)
+
         self.radioGreenRedEnergy = QRadioButton("Green/Red energy")
         self.radioGreenRedEnergy.toggled.connect(self.radioButtonColor)
+
         self.radioNoColor = QRadioButton("No color")
         self.radioNoColor.toggled.connect(self.radioButtonColor)
+
+        self.radioMultiColor = QRadioButton("Multicolor")
+        self.radioMultiColor.toggled.connect(self.radioButtonColor)
 
         self.radioGreenRed.setChecked(True)
         vbox = QVBoxLayout()
         vbox.addWidget(self.radioGreenRed)
         vbox.addWidget(self.radioGreenRedEnergy)
         vbox.addWidget(self.radioNoColor)
+        vbox.addWidget(self.radioMultiColor)
         groupBox.setLayout(vbox)
 
         return groupBox
@@ -194,6 +252,8 @@ class WorldWindow(QWidget):
             self.openGL._print_style = PRINT_STYLE[1]
         elif self.radioNoColor.isChecked():
             self.openGL._print_style = PRINT_STYLE[2]
+        elif self.radioMultiColor.isChecked():
+            self.openGL._print_style = PRINT_STYLE[3]
         else:
             raise Exception("No radio button is chosen")
 
