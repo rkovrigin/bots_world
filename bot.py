@@ -42,7 +42,7 @@ how many bots has eaten
 # TODO: After that generate new generation with the best bots
 # TODO: Implement running out of predators
 # TODO: Implement following the victim
-
+# TODO: Create weight of action, eat/move/stay
 
 class Bot(object):
     __slots__ = ["_mutant", "_energy", "_size", "_commands", "_age", "_is_alive", "_move_cost", "_day_cost",
@@ -68,10 +68,10 @@ class Bot(object):
 
         if copy_commands is None:
             for i in range(self._size):
-                if i % 2:
-                    self._commands[i] = GET_ENERGY_FROM_SUN
-                else:
+                if i % 3:
                     self._commands[randrange(0, 64)] = randrange(0, 64)
+                else:
+                    self._commands[i] = GET_ENERGY_FROM_SUN
         else:
             self._commands = copy_commands[:]
 
@@ -262,7 +262,7 @@ class Bot(object):
             self.share_energy_with_same_kind(x, y)
         else:
             self._current_command = cmd
-            self._energy -= self._day_cost
+        self._energy -= self._day_cost
 
     def share_energy_with_same_kind(self, x, y):
         for i in range(1, 5):
