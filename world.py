@@ -9,7 +9,6 @@ from bot import Bot
 from mineral import Mineral, Mineral_short_info
 from collections import namedtuple
 
-#  TODO: create map as a tor, bots from the right side appear on the left side and vice versa
 SUN_RATE = 10
 DAYS_IN_MONTH = 30
 MONTHS = 12
