@@ -234,8 +234,8 @@ class GLWidget(QOpenGLWidget):
         painter.end()
 
     def mousePressEvent(self, event):
-        x = event.localPos().x()
-        y = event.localPos().y()
+        x = event.localPos().x() / self._scale
+        y = event.localPos().y() / self._scale
         self._label.setText("PRESSED at [%d;%d]" % (x, y))
 
 
