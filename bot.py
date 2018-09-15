@@ -43,6 +43,7 @@ how many bots has eaten
 # TODO: Implement running out of predators
 # TODO: Implement following the victim
 # TODO: Create weight of action, eat/move/stay
+# TODO: Implement jump
 
 class Bot(object):
     __slots__ = ["_mutant", "_energy", "_size", "_commands", "_age", "_is_alive", "_move_cost", "_day_cost",
@@ -148,6 +149,7 @@ class Bot(object):
             child._move_cost = max(0, self._move_cost + randrange(-1, 2))
             child._max_age = max(0, self._max_age + randrange(-1, 2))
             child._sun_rate = max(1, self._sun_rate + randrange(-1, 2))
+            self._bite_mineral = max(1, self._bite_mineral + randrange(-1, 2))
             return True
         return False
 
@@ -196,7 +198,7 @@ class Bot(object):
         pass
 
     def eat_another_bot(self, x, y):
-        for i in range(1, 5):
+        for i in range(1, 9):
             coord_x, coord_y = self._find_direction_cell(x, y, pointer_step=i)
             possible_victim = self._map.at(coord_x, coord_y)
 
