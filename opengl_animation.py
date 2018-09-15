@@ -230,6 +230,11 @@ class GLWidget(QOpenGLWidget):
         self.helper.paint(painter, event, map, self._print_style)
         painter.end()
 
+    def mousePressEvent(self, event):
+        x = event.localPos().x()
+        y = event.localPos().y()
+        self._label.setText("PRESSED at [%d;%d]" % (x, y))
+
 
 class WorldWindow(QWidget):
     def __init__(self, queue, x, y, scale):
@@ -238,13 +243,13 @@ class WorldWindow(QWidget):
         self.setWindowTitle("World of bots")
 
         helper = Helper(x, y, scale)
-        openGLLabel = QLabel()
-        openGLLabel.setAlignment(Qt.AlignHCenter)
-        self.openGL = GLWidget(helper, self, queue, x, y, scale, openGLLabel)
+        self.openGLLabel = QLabel()
+        self.openGLLabel.setAlignment(Qt.AlignHCenter)
+        self.openGL = GLWidget(helper, self, queue, x, y, scale, self.openGLLabel)
 
         layout = QGridLayout()
         layout.addWidget(self.openGL, 0, 1)
-        layout.addWidget(openGLLabel, 1, 1)
+        layout.addWidget(self.openGLLabel, 1, 1)
         self.setLayout(layout)
 
         self.button_box = self.createRadioButtonGroup()
