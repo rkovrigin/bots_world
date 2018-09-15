@@ -68,9 +68,10 @@ class Bot(object):
 
         if copy_commands is None:
             for i in range(self._size):
-                self._commands[i] = GET_ENERGY_FROM_SUN
-            for _ in range(10):
-                self._commands[randrange(0, 64)] = randrange(0, 64)
+                if i % 2:
+                    self._commands[i] = GET_ENERGY_FROM_SUN
+                else:
+                    self._commands[randrange(0, 64)] = randrange(0, 64)
         else:
             self._commands = copy_commands[:]
 
