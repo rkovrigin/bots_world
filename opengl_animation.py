@@ -91,7 +91,8 @@ class Helper(object):
                 elif member.kind == BOT_MINERAL_KIND:
                     self.drawRect(painter, member.x, member.y, Qt.blue)
                 else:
-                    raise Exception("No such bot kind")
+                    self.drawRect(painter, member.x, member.y, Qt.gray)
+                    # raise Exception("No such bot kind %d" % member.kind)
             elif isinstance(member, Mineral_short_info):
                 self.drawRect(painter, member.x, member.y, Qt.magenta)
             else:
@@ -113,6 +114,8 @@ class Helper(object):
                     color = QColor(0, 255, 0, transparancy)
                 elif member.kind == BOT_MINERAL_KIND:
                     color = QColor(0, 0, 255, transparancy)
+                else:
+                    color = Qt.gray
             elif isinstance(member, Mineral_short_info):
                 if member.quantity < 50:
                     transparancy = 50

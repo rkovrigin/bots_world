@@ -13,7 +13,7 @@ SUN_RATE = 10
 DAYS_IN_MONTH = 30
 MONTHS = 12
 
-sun_rates = [4, 4, 5, 6, 7, 8, 9, 7, 6, 4, 5, 3, 2]
+sun_rates = [8, 8, 10, 12, 14, 16, 18, 14, 12, 8, 10, 6, 4]
 
 Data = namedtuple("Data", ["cycle", "day", "population", "sun_rate"])
 

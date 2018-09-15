@@ -3,16 +3,16 @@ from random import randrange, randint, choice
 
 from mineral import Mineral
 
-EAT_MINERAL = 00
-SHARE_ENERGY = 1
-EAT_MINERAL = 2
-GET_ENERGY = 11
+EAT_MINERAL           = 00
+SHARE_ENERGY          = 1
+EAT_MINERAL           = 2
+GET_ENERGY_FROM_SUN   = 11
 RUNAWAY_FROM_PREDATOR = 12
-CREATE_COPY = 22
-LOOK_AROUND = 33
-MOVE = 44
-EAT_ANOTHER_BOT = 55
-FALLOW_VICTIM = 56
+CREATE_COPY           = 22
+LOOK_AROUND           = 33
+MOVE                  = 44
+EAT_ANOTHER_BOT       = 55
+FALLOW_VICTIM         = 56
 
 __evolution_probability__ = 4
 __life_length__ = 100
@@ -46,10 +46,10 @@ how many bots has eaten
 
 class Bot(object):
     __slots__ = ["_mutant", "_energy", "_size", "_commands", "_age", "_is_alive", "_move_cost", "_day_cost",
-                 "_current_command", "_max_age", "_kind", "_mineraler", "sun_rate", "_map", "_bite_mineral",
+                 "_current_command", "_max_age", "_kind", "_mineraler", "_sun_rate", "_map", "_bite_mineral",
                  "_color"]
 
-    def __init__(self, map, energy=100, mutant=False, copy_commands=None, kind=BOT_VEGAN_KIND):
+    def __init__(self, map, energy=100, mutant=False, copy_commands=None):
         self._mutant = mutant
         self._energy = energy
         self._size = 64
@@ -58,21 +58,19 @@ class Bot(object):
         self._is_alive = True
         self._move_cost = randrange(1, 5)
         self._current_command = 0
-        self._max_age = randrange(70, 200)
-        self._kind = kind
+        self._max_age = randrange(70, 100)
+        self._kind = 0
         self._map = map
         self._color = 0
         self._day_cost = 0
         self._bite_mineral = randrange(20, 40)
-
-        if self._kind == BOT_PREDATOR_KIND:
-            self.sun_rate = 0
-        else:
-            self.sun_rate = choice((0.9, 1.0))
+        self._sun_rate = choice((5, 6, 7))
 
         if copy_commands is None:
             for i in range(self._size):
-                self._commands[i] = randrange(0, 64)
+                self._commands[i] = GET_ENERGY_FROM_SUN
+            for _ in range(10):
+                self._commands[randrange(0, 64)] = randrange(0, 64)
         else:
             self._commands = copy_commands[:]
 
@@ -96,7 +94,7 @@ class Bot(object):
             elif self._commands[i] == EAT_MINERAL:
                 self._kind = BOT_MINERAL_KIND
                 self._color |= BOT_MINERAL_KIND
-            elif self._commands[i] == GET_ENERGY:
+            elif self._commands[i] == GET_ENERGY_FROM_SUN:
                 self._kind = BOT_VEGAN_KIND
                 self._color |= BOT_VEGAN_KIND
 
@@ -144,15 +142,11 @@ class Bot(object):
 
         if self._energy >= 70:
             self._energy -= 30
-            child = Bot(self._map, energy=10, mutant=mutate, copy_commands=self._commands, kind=self._kind)
+            child = Bot(self._map, energy=10, mutant=mutate, copy_commands=self._commands)
             self._map.add_member_in_pos(child, coord_x, coord_y)
-            if self._kind == BOT_PREDATOR_KIND:
-                # child._kind = BOT_PREDATOR_KIND
-                child.sun_rate = 0.4
-            else:
-                child.sun_rate += choice(sun_rates_diff)
-            child._move_cost = self._move_cost
-            child._max_age = self._max_age
+            child._move_cost = max(0, self._move_cost + randrange(-1, 2))
+            child._max_age = max(0, self._max_age + randrange(-1, 2))
+            child._sun_rate = max(1, self._sun_rate + randrange(-1, 2))
             return True
         return False
 
@@ -178,10 +172,10 @@ class Bot(object):
         return True
 
     def receive_energy(self, sun_rate):
-        if sun_rate > 20:
-            self.die("SUN RATE REASON")
+        if sun_rate//2 > self._sun_rate:
+            self.die("Sun burned me")
         else:
-            self._energy += sun_rate * self.sun_rate
+            self._energy += min(self._sun_rate, sun_rate)
 
     def eat_mineral(self, x, y):
         for i in range(1, 5):
@@ -218,9 +212,9 @@ class Bot(object):
         #     if possible_victim._kind == BOT_PREDATOR_KIND:
         #         return False
 
-            # TODO: Find out correct rule for that
-            # if self._energy < possible_victim._energy/4:
-            #     return False
+        # # TODO: Find out correct rule for that
+        # if self._energy < possible_victim._energy/4:
+        #     return False
 
             # if self._energy < possible_victim._energy/10 or self._age < possible_victim._age:
             #     return False
@@ -248,11 +242,8 @@ class Bot(object):
         self._current_command = self._next_command_pointer()
         cmd = self._commands[self._current_command]
 
-        if cmd == GET_ENERGY:
-            if self._kind == BOT_PREDATOR_KIND:
-                self.eat_another_bot(x, y)
-            else:
-                self.receive_energy(self._map.sun_rate)
+        if cmd == GET_ENERGY_FROM_SUN:
+            self.receive_energy(self._map.sun_rate)
         elif cmd == CREATE_COPY:
             mutate = False
             if randint(0, 3) == 0:
