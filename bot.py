@@ -11,6 +11,7 @@ RUNAWAY_FROM_PREDATOR = 12
 CREATE_COPY           = 22
 LOOK_AROUND           = 33
 MOVE                  = 44
+JUMP                  = 45
 EAT_ANOTHER_BOT       = 55
 FALLOW_VICTIM         = 56
 
@@ -24,6 +25,10 @@ BOT_VEGAN_KIND    = 0x003400
 BOT_MINERAL_KIND  = 0x000080
 
 get_cells_around_list = ((-1, -1), (1, 1), (1, -1), (-1, 1), (-1, 0), (1, 0), (0, -1), (0, 1))
+get_cells_to_jump_list = ((-2, 2), (-1, 2), (0, 2), (1, 2),
+                          (2, 2), (2, 1), (2, 0), (2, -1),
+                          (2, -2), (1, -2), (0, -2), (-1, -2),
+                          (-2, -2), (-2, -1), (-2, 0), (-2, 1))
 
 sun_rates_diff = list((i/100 for i in range(-10, 11)))
 
@@ -43,12 +48,11 @@ how many bots has eaten
 # TODO: Implement running out of predators
 # TODO: Implement following the victim
 # TODO: Create weight of action, eat/move/stay
-# TODO: Implement jump
 
 class Bot(object):
     __slots__ = ["_mutant", "_energy", "_size", "_commands", "_age", "_is_alive", "_move_cost", "_day_cost",
                  "_current_command", "_max_age", "_kind", "_mineraler", "_sun_rate", "_map", "_bite_mineral",
-                 "_color"]
+                 "_color", "_jump_cost"]
 
     def __init__(self, map, energy=100, mutant=False, copy_commands=None):
         self._mutant = mutant
@@ -58,6 +62,7 @@ class Bot(object):
         self._age = 0
         self._is_alive = True
         self._move_cost = randrange(1, 5)
+        self._jump_cost = randrange(6, 12)
         self._current_command = 0
         self._max_age = randrange(70, 100)
         self._kind = 0
@@ -149,7 +154,8 @@ class Bot(object):
             child._move_cost = max(0, self._move_cost + randrange(-1, 2))
             child._max_age = max(0, self._max_age + randrange(-1, 2))
             child._sun_rate = max(1, self._sun_rate + randrange(-1, 2))
-            self._bite_mineral = max(1, self._bite_mineral + randrange(-1, 2))
+            child._bite_mineral = max(1, self._bite_mineral + randrange(-1, 2))
+            child._jump_cost = max(0, self._jump_cost + randrange(-1, 2))
             return True
         return False
 
@@ -157,6 +163,14 @@ class Bot(object):
         next_cp = self._next_command_pointer(pointer_step)
         spin = self._commands[next_cp] % 8
         new_coord_x, new_coord_y = get_cells_around_list[spin]
+        return x + new_coord_x, y + new_coord_y
+
+    def _find_direction_cell_jump(self, x, y, pointer_step=1):
+        next_cp = self._next_command_pointer(pointer_step)
+        spin = self._commands[next_cp] % 4
+        next_cp2 = self._next_command_pointer(pointer_step+1)
+        spin2 = self._commands[next_cp2] % 4
+        new_coord_x, new_coord_y = get_cells_to_jump_list[spin*4 + spin2]
         return x + new_coord_x, y + new_coord_y
 
     def _find_direction(self, pointer_step=1):
@@ -258,6 +272,8 @@ class Bot(object):
             self.look_around()
         elif cmd == MOVE:
             self.move_with_spin(x, y)
+        elif cmd == JUMP:
+            self.jump_with_spin(x, y)
         elif cmd == EAT_ANOTHER_BOT:
             self.eat_another_bot(x, y)
         elif cmd == SHARE_ENERGY:
@@ -284,6 +300,16 @@ class Bot(object):
             return True
 
         return False
+
+    def jump_with_spin(self, x, y):
+        coord_x, coord_y = self._find_direction_cell_jump(x, y)
+
+        if self._energy <= self._move_cost or self._map.at(coord_x, coord_y) is not None:
+            return False
+
+        self._map.move(x, y, coord_x, coord_y)
+        self._energy -= self._move_cost
+        return True
 
 #TODO PREDATOR EATS EVERYONE
 #TODO PREDATOR/(VEGAN||MINERAL) CAN EAT ALL EXCEPT PREDATOR and SAME KIND
