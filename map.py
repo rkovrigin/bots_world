@@ -98,22 +98,19 @@ class Map(object):
         else:
             return outside_map
 
-    def get_bots_amount(self):
-        amount = 0
-        for _ in self.iterate_members(Bot):
-            amount += 1
-        return amount
+    def get_members_amount(self, member_kind=None):
+        return sum(1 for _ in self.iterate_members(member_kind=member_kind))
 
     def cycle(self):
-        for member, x, y in self.iterate_members(Bot):
+        for member, x, y in self.iterate_members():
             member.execute_command(x, y)
             if not member.is_alive:
                 del self._map[(x, y)]
 
-        for member, x, y in self.iterate_members(Mineral):
-            member.grow()
-            if not member._is_active:
-                del self._map[x, y]
+        #for member, x, y in self.iterate_members(Mineral):
+        #    member.grow()
+        #    if not member._is_active:
+        #        del self._map[x, y]
 
     #TODO: Save snapshots of actions
     def iterate_members(self, member_kind=None):
