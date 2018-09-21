@@ -24,6 +24,9 @@ BOT_PREDATOR_KIND = 0xff0000
 BOT_VEGAN_KIND    = 0x003400
 BOT_MINERAL_KIND  = 0x000080
 
+MAX_ENERGY = 255
+BIRTH_COST = 50
+
 get_cells_around_list = ((-1, -1), (1, 1), (1, -1), (-1, 1), (-1, 0), (1, 0), (0, -1), (0, 1))
 get_cells_to_jump_list = ((-2, 2), (-1, 2), (0, 2), (1, 2),
                           (2, 2), (2, 1), (2, 0), (2, -1),
@@ -97,12 +100,13 @@ class BotRepresentation(object):
             return self.UNKNOWN_BOT_COLOR
 
     def set_scene_energy(self):
-        if self.energy > 255:
-            return Representation(255, 0, 0)
-        elif self.energy > 0:
-            return Representation(255, 255 - self.energy, 0, self.energy)
-        else:
-            return self.UNKNOWN_BOT_COLOR
+        return Representation(255, 0, 0, self.energy)
+        # if self.energy > 255:
+        #     return Representation(255, 0, 0)
+        # elif self.energy > 0:
+        #     return Representation(255, 255 - self.energy, 0, self.energy)
+        # else:
+        #     return self.UNKNOWN_BOT_COLOR
 
     def print_style(self, print_style_id=None):
         if print_style_id is None:
@@ -144,21 +148,22 @@ class Bot(BotRepresentation):
         self._kind = 0
         self._map = map
         self._bitmap = 0
-        self._day_cost = randrange(1, 3)
+        self._day_cost = randrange(1, 10)
         self._bite_mineral = randrange(20, 40)
-        self._sun_rate = choice((5, 6, 7))
+        self._sun_rate = choice((10, 11, 12))
 
         if copy_commands is None:
             for i in range(self._size):
-                if i > 50:
-                    self._commands[randrange(0, 64)] = randrange(0, 64)
-                else:
+                if i < 10:
                     self._commands[i] = GET_ENERGY_FROM_SUN
+                else:
+                    self._commands[i] = randrange(0, self._size)
         else:
             self._commands = copy_commands[:]
 
         if mutant:
             self._mutate()
+
         self._set_kind()
 
     def _mutate(self):
@@ -168,18 +173,23 @@ class Bot(BotRepresentation):
         self._commands[rand_nmb] = new_cmd_nmb
 
     def _set_kind(self):
-        for i in self._commands:
-            if self._commands[i] == EAT_ANOTHER_BOT:
+        for command in self._commands:
+            if command == EAT_ANOTHER_BOT:
                 self._kind = BOT_PREDATOR_KIND
                 self._bitmap |= BOT_PREDATOR_KIND
-            elif self._commands[i] == EAT_MINERAL:
+            elif command == EAT_MINERAL:
                 self._kind = BOT_MINERAL_KIND
                 self._bitmap |= BOT_MINERAL_KIND
-            elif self._commands[i] == GET_ENERGY_FROM_SUN:
+            elif command == GET_ENERGY_FROM_SUN:
                 self._kind = BOT_VEGAN_KIND
                 self._bitmap |= BOT_VEGAN_KIND
 
         # print ("SET_KIND = %r" % hex(self._color) )
+
+    def _change_energy(self, energy):
+        self._energy = min(self.energy + energy, MAX_ENERGY)
+        if self.energy < 0:
+            self.die("Energy level: %d" % self.energy)
 
     @property
     def size(self):
@@ -217,17 +227,20 @@ class Bot(BotRepresentation):
         return next_cmd
 
     def create_copy(self, x, y, mutate=False):
+        if self._energy < MAX_ENERGY:
+            return
 
-        for i in range(1, 5):
+        for i in range(1, 9):
             coord_x, coord_y = self._find_direction_cell(x, y, pointer_step=i)
             if self._map.at(coord_x, coord_y) is None:
                 break
         else:
+            self.die("Can't create copy")
             return False
 
-        if self._energy >= 100:
-            self._energy -= 50
-            child = Bot(self._map, energy=10, mutant=mutate, copy_commands=self._commands)
+        if self._energy >= MAX_ENERGY:
+            self._change_energy(-100)
+            child = Bot(self._map, energy=50, mutant=mutate, copy_commands=self._commands)
             self._map.add_member_in_pos(child, coord_x, coord_y)
             child._move_cost = max(1, self._move_cost + randrange(-1, 2))
             child._max_age = max(1, self._max_age + randrange(-1, 2))
@@ -264,10 +277,11 @@ class Bot(BotRepresentation):
             return False
 
         self._map.move(x, y, coord_x, coord_y)
-        self._energy -= self._move_cost
+        self._change_energy(-self._move_cost)
         return True
 
     def die_of_choking(self, x, y):
+        pass
         n = 0
         for _x, _y in get_cells_around_list:
             if self._map.at(x + _x, y + _y):
@@ -275,12 +289,12 @@ class Bot(BotRepresentation):
         if n == 7:
             self.die("choking")
 
-
     def receive_energy(self, sun_rate):
         if sun_rate//2 > self._sun_rate:
             self.die("Sun burned me")
         else:
-            self._energy += min(self._sun_rate, sun_rate)
+            energy = min(self._sun_rate, sun_rate)
+            self._change_energy(energy)
 
     def eat_mineral(self, x, y):
         for i in range(1, 5):
@@ -292,7 +306,7 @@ class Bot(BotRepresentation):
 
         mineral = self._map.at(coord_x, coord_y)
         bite = mineral.bite_piece(self._bite_mineral)
-        self._energy += bite
+        self._change_energy(bite)
         # print("Have bitten %d size piece at [%d:%d]" % (bite, coord_x, coord_y))
         return True
 
@@ -324,7 +338,7 @@ class Bot(BotRepresentation):
             # if self._energy < possible_victim._energy/10 or self._age < possible_victim._age:
             #     return False
 
-        self._energy += possible_victim._energy
+        self._change_energy(possible_victim._energy)
         possible_victim.die("EATEN BY PREDATOR REASON")
         return True
 
@@ -334,13 +348,16 @@ class Bot(BotRepresentation):
         # print(reason)
 
     def execute_command(self, x, y):
+        if not self.is_alive:
+            return
+
         if self.energy <= 0:
             self.die("ENERGY = 0 REASON")
             return
 
-        if self._age >= self._max_age:
-            self.die("AGE REASON")
-            return
+        # if self._age >= self._max_age:
+        #     self.die("AGE REASON")
+        #     return
 
         self._age += 1
 
@@ -369,10 +386,10 @@ class Bot(BotRepresentation):
         elif cmd == CHOCKING:
             self.die_of_choking(x, y)
         else:
-            #self._current_command = cmd
-            self._current_command = self._next_command_pointer()
-
-        self._energy -= self._day_cost
+            # self._current_command = cmd
+            self._current_command = self._next_command_pointer(max(1, cmd))
+            self._energy -= self._day_cost
+            # self._current_command = self._next_command_pointer()
 
     def share_energy_with_same_kind(self, x, y):
         for i in range(1, 5):
@@ -385,10 +402,11 @@ class Bot(BotRepresentation):
 
         assert self._bitmap == possible_mate._bitmap
 
-        if self._energy/3 >= possible_mate._energy:
-            one_third = self._energy/3
-            self._energy -= one_third
-            possible_mate._energy += one_third
+        if self._energy//3 >= possible_mate._energy:
+            one_third = self._energy//3
+            self._change_energy(one_third)
+            possible_mate._change_energy(-one_third)
+
             return True
 
         return False
@@ -400,7 +418,7 @@ class Bot(BotRepresentation):
             return False
 
         self._map.move(x, y, coord_x, coord_y)
-        self._energy -= self._move_cost
+        self._change_energy(-self._move_cost)
         return True
 
 #TODO PREDATOR EATS EVERYONE

@@ -7,21 +7,21 @@ from animate_example import Qwidget
 from opengl_animation import WorldWindow
 from world import World
 from queue import Queue
-from threading import Thread, Event
+from threading import Thread
 
 DEFAULT_UNIV_X = 200
 DEFAULT_UNIV_Y = 100
-BOTS_AT_BEGINNING = 100
+BOTS_AT_BEGINNING = 1000
 SCALE = 6
 
+exit_flag = 0
+
+
 def main():
-    queue = Queue(maxsize=1000)
-    event = Event()
-    world = World(queue, DEFAULT_UNIV_X, DEFAULT_UNIV_Y, BOTS_AT_BEGINNING, event=event)
+    queue = Queue(maxsize=0)
+    world = World(queue, DEFAULT_UNIV_X, DEFAULT_UNIV_Y, BOTS_AT_BEGINNING)
 
     world.start()
-    while queue.empty():
-        time.sleep(1)
 
     # app = QApplication(sys.argv)
     # widget = Qwidget(queue, DEFAULT_UNIV_X, DEFAULT_UNIV_Y, SCALE)
@@ -38,7 +38,8 @@ def main():
     window.show()
 
     app.exec_()
-    event.set()
+
+    world.finish_him()
     world.join()
 
 

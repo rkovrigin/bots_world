@@ -56,7 +56,7 @@ from representation import PRINT_STYLE_GREENRED, PRINT_STYLE_GREENRED_ENERGY, PR
 
 
 class GLWidget(QOpenGLWidget):
-    def __init__(self, parent, queue, x, y, scale, label):
+    def __init__(self, parent, queue, x, y, scale):
         super(GLWidget, self).__init__(parent)
 
         self.elapsed = 0
@@ -64,11 +64,14 @@ class GLWidget(QOpenGLWidget):
         self._y = y
         self._scale = scale
         self._queue = queue
-        self._label = label
+        self._parent = parent
         self._print_style = PRINT_STYLE_GREENRED
         self.setFixedSize(x*scale, y*scale)
         self.setAutoFillBackground(False)
         self.background = QBrush(QColor(255, 255, 255))
+        self._members = None
+        self._click_x = None
+        self._click_y = None
 
     def animate(self):
         self.elapsed = (self.elapsed + self.sender().interval()) % 1000
@@ -78,10 +81,10 @@ class GLWidget(QOpenGLWidget):
         painter = QPainter()
         painter.begin(self)
         painter.setRenderHint(QPainter.Antialiasing)
-        members = self._queue.get()
+        self._members = self._queue.get()
         fps = 666
-        self._label.setText("Frames: %d; Bots: %d; FPS: %f" % (self._queue.qsize(), len(members), fps))
-        self.paint(painter, event, members)
+        self._parent.openGLLabel.setText("Frames: %d; Bots: %d; FPS: %f" % (self._queue.qsize(), len(self._members), fps))
+        self.paint(painter, event, self._members)
         painter.end()
 
     def drawRect(self, painter, x, y):
@@ -92,22 +95,28 @@ class GLWidget(QOpenGLWidget):
         painter.save()
 
         if self._print_style == PRINT_STYLE_NO_COLOR:
-            for repr, x, y in members:
+            for repr, x, y, energy, commands in members:
                 self.drawRect(painter, x, y)
         elif self._print_style != PRINT_STYLE_NO_DRAWING:
-            for repr, x, y in members:
-                if type(repr) is list:
-                    painter.setBrush(repr[self._print_style].color)
-                else:
-                    painter.setBrush(repr.color)
+            for repr, x, y, energy, commands in members:
+                #if type(repr) in (list, tuple):
+                painter.setBrush(repr[self._print_style].color)
+                #else:
+                #    painter.setBrush(repr.color)
                 self.drawRect(painter, x, y)
+                if x == self._click_x and y == self._click_y and len(commands) > 0:
+                    print_pattern = (("%d " * 8) + "\n")*8
+                    text = print_pattern % tuple(commands)
+                    text += "Energy %d" % energy
+                    self._parent.openGLLabel_commands.setText(text)
+                    self._click_x = None
+                    self._click_y = None
 
         painter.restore()
 
     def mousePressEvent(self, event):
-        x = event.localPos().x() / self._scale
-        y = event.localPos().y() / self._scale
-        self._label.setText("PRESSED at [%d;%d]" % (x, y))
+        self._click_x = int(event.localPos().x() // self._scale)
+        self._click_y = int(event.localPos().y() // self._scale)
 
 
 class WorldWindow(QWidget):
@@ -117,12 +126,18 @@ class WorldWindow(QWidget):
         self.setWindowTitle("World of bots")
 
         self.openGLLabel = QLabel()
+        self.openGLLabel_commands = QLabel()
         self.openGLLabel.setAlignment(Qt.AlignHCenter)
-        self.openGL = GLWidget(self, queue, x, y, scale, self.openGLLabel)
+        self.openGLLabel.setAlignment(Qt.AlignLeft)
+        self.openGL = GLWidget(self, queue, x, y, scale)
 
         layout = QGridLayout()
-        layout.addWidget(self.openGL, 0, 1)
-        layout.addWidget(self.openGLLabel, 1, 1)
+        # layout.addWidget(self.openGL, 0, 1)
+        # layout.addWidget(self.openGLLabel, 1, 1)
+        # layout.addWidget(self.openGLLabel_commands, 1, 1)
+        layout.addWidget(self.openGL)
+        layout.addWidget(self.openGLLabel)
+        layout.addWidget(self.openGLLabel_commands)
         self.setLayout(layout)
 
         self.button_box = self.createRadioButtonGroup()
@@ -157,9 +172,9 @@ class WorldWindow(QWidget):
         vbox = QVBoxLayout()
         vbox.addWidget(self.radioGreenRed)
         vbox.addWidget(self.radioGreenRedEnergy)
-        vbox.addWidget(self.radioNoColor)
         vbox.addWidget(self.radioMultiColor)
         vbox.addWidget(self.radioEnergy)
+        vbox.addWidget(self.radioNoColor)
         vbox.addWidget(self.noDrawing)
         groupBox.setLayout(vbox)
 

@@ -10,22 +10,22 @@ class MineralRepresentation(object):
         return MAGENTA
 
     def set_scene_transparency(self):
-        if self.quantity < 50:
+        if self.energy < 50:
             transparancy = 50
-        elif self.quantity > 255:
+        elif self.energy > 255:
             transparancy = 255
         else:
-            transparancy = self.quantity
+            transparancy = self.energy
         return Representation(0xf4, 72, 0xd0, transparancy)
 
     def set_scene_bot_kind(self):
         return self.set_scene_transparency()
 
     def set_scene_energy(self):
-        if self.quantity > 255:
+        if self.energy > 255:
             transparancy = 255
         else:
-            transparancy = self.quantity
+            transparancy = self.energy
         return Representation(0xe5, 0x69, 0xf5, transparancy)
 
     def print_style(self, print_style_id=None):
@@ -50,8 +50,9 @@ class MineralRepresentation(object):
 
 
 class Mineral(MineralRepresentation):
-    def __init__(self, map, quantity=255):
-        self._quantity = quantity
+    def __init__(self, map, energy=255):
+        self._energy = energy
+        self._commands = []
 
         self._is_active = True
         self._map = map
@@ -61,8 +62,8 @@ class Mineral(MineralRepresentation):
         return self._is_active
 
     @property
-    def quantity(self):
-        return self._quantity
+    def energy(self):
+        return self._energy
 
     def die(self):
         self._is_active = False
@@ -74,14 +75,14 @@ class Mineral(MineralRepresentation):
         if size < 0:
             return 0
 
-        bite = min(size, self._quantity)
-        self._quantity -= bite
+        bite = min(size, self._energy)
+        self._energy -= bite
 
-        if self._quantity <= 0:
+        if self._energy <= 0:
             self.die()
 
         return bite
 
     def execute_command(self, x, y):
-        if self._quantity > 0:
-            self._quantity += 1
+        if self._energy > 0:
+            self._energy += 1

@@ -1,7 +1,15 @@
 from collections import defaultdict
 from random import randint, randrange
+
 from bot import Bot
-from mineral import Mineral
+
+
+def my_mod(a, n):
+    while a >= n:
+        a -= n
+    while a < 0:
+        a += n
+    return a
 
 
 class OutsideOfMap(object):
@@ -40,8 +48,8 @@ class Map(object):
 
     def add_member_in_pos(self, member, x, y):
         if self._wrapper:
-            x %= self.x
-            y %= self.y
+            x = my_mod(x, self.x)
+            y = my_mod(y, self.y)
         self._map[(x, y)] = member
         return True
 
@@ -58,17 +66,19 @@ class Map(object):
 
     def move(self, x, y, new_x, new_y):
         if self._wrapper:
-            x %= self.x
-            y %= self.y
-            new_x %= self.x
-            new_y %= self.y
+            x = my_mod(x, self.x)
+            y = my_mod(y, self.y)
+
+            new_x = my_mod(new_x, self.x)
+            new_y = my_mod(new_y, self.y)
+
         self._map[(new_x, new_y)] = self._map[(x, y)]
         del self._map[(x, y)]
 
     def remove_bot(self, x, y):
         if self._wrapper:
-            x %= self.x
-            y %= self.y
+            x = my_mod(x, self.x)
+            y = my_mod(y, self.y)
         if (x, y) in self._map:
             del self._map[(x, y)]
 
@@ -83,8 +93,8 @@ class Map(object):
 
     def at(self, x, y):
         if self._wrapper:
-            x %= self.x
-            y %= self.y
+            x = my_mod(x, self.x)
+            y = my_mod(y, self.y)
 
             if (x, y) in self._map:
                 return self._map[(x, y)]
@@ -99,7 +109,10 @@ class Map(object):
             return outside_map
 
     def get_members_amount(self, member_kind=None):
-        return sum(1 for _ in self.iterate_members(member_kind=member_kind))
+        if member_kind is None:
+            return len(self._map)
+        else:
+            return sum(1 for _ in self.iterate_members(member_kind=member_kind))
 
     def cycle(self):
         for member, x, y in self.iterate_members():
@@ -118,3 +131,6 @@ class Map(object):
             member = self._map[(x, y)]
             if member_kind is None or isinstance(member, member_kind):
                 yield member, x, y
+
+    def create_representation_snapshot(self):
+        return [[member.print_style(), x, y, member.energy, member._commands] for (x, y), member in self._map.items()]
