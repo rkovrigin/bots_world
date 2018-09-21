@@ -67,8 +67,8 @@ class BotRepresentation(object):
     def set_scene_transparency(self):
         if self.energy > 255:
             transparancy = 255
-        elif self.energy > 0 and self.energy < 100:
-            transparancy = 100
+        elif self.energy < 100:
+            transparancy = 50
         else:
             transparancy = self.energy
 
@@ -100,7 +100,8 @@ class BotRepresentation(object):
             return self.UNKNOWN_BOT_COLOR
 
     def set_scene_energy(self):
-        return Representation(255, 0, 0, self.energy)
+        return Representation(255, 0, 0, max(0, self.energy))
+
         # if self.energy > 255:
         #     return Representation(255, 0, 0)
         # elif self.energy > 0:
