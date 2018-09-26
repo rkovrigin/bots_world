@@ -49,7 +49,7 @@ how many bots has eaten
 class Bot(BotRepresentation):
     __slots__ = ["_mutant", "_energy", "_size", "_commands", "_age", "_is_alive", "_move_cost", "_day_cost",
                  "_current_command", "_max_age", "_kind", "_sun_rate", "_map", "_bite_mineral",
-                 "_bitmap", "_jump_cost"]
+                 "_bitmap", "_jump_cost", "_copy_cost"]
 
     def __init__(self, map, energy=100, mutant=False, copy_commands=None):
         self._mutant = mutant
@@ -68,6 +68,7 @@ class Bot(BotRepresentation):
         self._day_cost = randrange(1, 10)
         self._bite_mineral = randrange(20, 40)
         self._sun_rate = choice((10, 11, 12))
+        self._copy_cost = 150
 
         if copy_commands is None:
             for i in range(self._size):
@@ -157,7 +158,7 @@ class Bot(BotRepresentation):
             return False
 
         if self._energy >= MAX_ENERGY:
-            self._change_energy(-100)
+            self._change_energy(-self._copy_cost)
             child = Bot(self._map, energy=50, mutant=mutate, copy_commands=self._commands)
             self._map.add_member_in_pos(child, coord_x, coord_y)
             child._move_cost = max(1, self._move_cost + randrange(-1, 2))
@@ -166,6 +167,7 @@ class Bot(BotRepresentation):
             child._bite_mineral = max(1, self._bite_mineral + randrange(-1, 2))
             child._jump_cost = max(1, self._jump_cost + randrange(-1, 2))
             child._day_cost = max(1, self._day_cost + randrange(-1, 2))
+            child._copy_cost = max(50, self._copy_cost + randrange(-1, 2))
             return True
         return False
 
