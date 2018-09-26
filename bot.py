@@ -1,28 +1,23 @@
 from random import randrange, randint, choice
-
 from mineral import Mineral
 from representation import *
 
 SHARE_ENERGY          = 1
 EAT_MINERAL           = 2
-CHOCKING              = 3
-GET_ENERGY_FROM_SUN   = 11
+GET_ENERGY_FROM_SUN   = 4
+EAT_ANOTHER_BOT       = 8
 RUNAWAY_FROM_PREDATOR = 12
 CREATE_COPY           = 22
 LOOK_AROUND           = 33
 MOVE                  = 44
 JUMP                  = 45
-EAT_ANOTHER_BOT       = 55
+CHOCKING              = 55
 FALLOW_VICTIM         = 56
 
 __evolution_probability__ = 4
 __life_length__ = 100
 
 MASK = 0b111111
-
-BOT_PREDATOR_KIND = 0xff0000
-BOT_VEGAN_KIND    = 0x003400
-BOT_MINERAL_KIND  = 0x000080
 
 MAX_ENERGY = 255
 BIRTH_COST = 50
@@ -51,84 +46,6 @@ how many bots has eaten
 # TODO: Create weight of action, eat/move/stay
 
 
-class BotRepresentation(object):
-    UNKNOWN_BOT_COLOR = GRAY
-
-    def set_scene(self):
-        if self.kind == BOT_PREDATOR_KIND:
-            return RED
-        elif self.kind == BOT_VEGAN_KIND:
-            return GREEN
-        elif self.kind == BOT_MINERAL_KIND:
-            return BLUE
-        else:
-            return self.UNKNOWN_BOT_COLOR
-
-    def set_scene_transparency(self):
-        if self.energy > 255:
-            transparancy = 255
-        elif self.energy > 0 and self.energy < 100:
-            transparancy = 100
-        else:
-            transparancy = self.energy
-
-        if self.kind == BOT_PREDATOR_KIND:
-            return Representation(255, 0, 0, transparancy)
-        elif self.kind == BOT_VEGAN_KIND:
-            return Representation(0, 255, 0, transparancy)
-        elif self.kind == BOT_MINERAL_KIND:
-            return Representation(0, 0, 255, transparancy)
-        else:
-            return self.UNKNOWN_BOT_COLOR
-
-    def set_scene_bot_kind(self):
-        if self.bitmap == BOT_PREDATOR_KIND:
-            return RED
-        elif self.bitmap == BOT_MINERAL_KIND:
-            return BLUE
-        elif self.bitmap == BOT_VEGAN_KIND:
-            return GREEN
-        elif self.bitmap == BOT_PREDATOR_KIND | BOT_VEGAN_KIND:
-            return YELLOW
-        elif self.bitmap == BOT_PREDATOR_KIND | BOT_MINERAL_KIND:
-            return ORANGE
-        elif self.bitmap == BOT_VEGAN_KIND | BOT_MINERAL_KIND:
-            return LIGHT_BLUE
-        elif self.bitmap == BOT_PREDATOR_KIND | BOT_MINERAL_KIND | BOT_VEGAN_KIND:
-            return PURPLE
-        else:
-            return self.UNKNOWN_BOT_COLOR
-
-    def set_scene_energy(self):
-        return Representation(255, 0, 0, self.energy)
-        # if self.energy > 255:
-        #     return Representation(255, 0, 0)
-        # elif self.energy > 0:
-        #     return Representation(255, 255 - self.energy, 0, self.energy)
-        # else:
-        #     return self.UNKNOWN_BOT_COLOR
-
-    def print_style(self, print_style_id=None):
-        if print_style_id is None:
-            return (
-                self.set_scene(),
-                self.set_scene_transparency(),
-                self.set_scene_bot_kind(),
-                self.set_scene_energy(),
-            )
-
-        if print_style_id == PRINT_STYLE_GREENRED:
-            return self.set_scene()
-        elif print_style_id == PRINT_STYLE_GREENRED_ENERGY:
-            return self.set_scene_transparency()
-        elif print_style_id == PRINT_STYLE_MULTICOLOR:
-            return self.set_scene_bot_kind()
-        elif print_style_id == PRINT_STYLE_ENERGY:
-            return self.set_scene_energy()
-        else:
-            return self.UNKNOWN_BOT_COLOR
-
-
 class Bot(BotRepresentation):
     __slots__ = ["_mutant", "_energy", "_size", "_commands", "_age", "_is_alive", "_move_cost", "_day_cost",
                  "_current_command", "_max_age", "_kind", "_sun_rate", "_map", "_bite_mineral",
@@ -154,10 +71,13 @@ class Bot(BotRepresentation):
 
         if copy_commands is None:
             for i in range(self._size):
-                if i < 10:
-                    self._commands[i] = GET_ENERGY_FROM_SUN
-                else:
-                    self._commands[i] = randrange(0, self._size)
+                self._commands[i] = 0; randrange(0, self._size)
+                # if i < 10:
+                #     self._commands[i] = GET_ENERGY_FROM_SUN
+                # else:
+                #     self._commands[i] = randrange(0, self._size)
+            self._commands[0] = GET_ENERGY_FROM_SUN
+            self._commands[-1] = CREATE_COPY
         else:
             self._commands = copy_commands[:]
 
@@ -183,8 +103,6 @@ class Bot(BotRepresentation):
             elif command == GET_ENERGY_FROM_SUN:
                 self._kind = BOT_VEGAN_KIND
                 self._bitmap |= BOT_VEGAN_KIND
-
-        # print ("SET_KIND = %r" % hex(self._color) )
 
     def _change_energy(self, energy):
         self._energy = min(self.energy + energy, MAX_ENERGY)
@@ -273,18 +191,18 @@ class Bot(BotRepresentation):
     def move_with_spin(self, x, y):
         coord_x, coord_y = self._find_direction_cell(x, y)
 
-        if self._energy <= self._move_cost or self._map.at(coord_x, coord_y) is not None:
-            return False
+        if self.energy >= self._move_cost and self._map.at(coord_x, coord_y) is None:
+            self._map.move(x, y, coord_x, coord_y)
+            self._change_energy(-self._move_cost)
+            return True
 
-        self._map.move(x, y, coord_x, coord_y)
-        self._change_energy(-self._move_cost)
-        return True
+        return False
 
     def die_of_choking(self, x, y):
         pass
         n = 0
         for _x, _y in get_cells_around_list:
-            if self._map.at(x + _x, y + _y):
+            if self._map.at(x + _x, y + _y) and self._map.at(x + _x, y + _y) is not self._map._outside_map:
                 n += 1
         if n == 7:
             self.die("choking")
@@ -367,7 +285,7 @@ class Bot(BotRepresentation):
         if cmd == GET_ENERGY_FROM_SUN:
             self.receive_energy(self._map.sun_rate)
         elif cmd == CREATE_COPY:
-            mutate = False
+            mutate = True #False
             if randint(0, 3) == 0:
                 mutate = True
             self.create_copy(x, y, mutate=mutate)
@@ -388,7 +306,7 @@ class Bot(BotRepresentation):
         else:
             # self._current_command = cmd
             self._current_command = self._next_command_pointer(max(1, cmd))
-            self._energy -= self._day_cost
+            self._change_energy(-self._day_cost)
             # self._current_command = self._next_command_pointer()
 
     def share_energy_with_same_kind(self, x, y):
@@ -404,8 +322,8 @@ class Bot(BotRepresentation):
 
         if self._energy//3 >= possible_mate._energy:
             one_third = self._energy//3
-            self._change_energy(one_third)
-            possible_mate._change_energy(-one_third)
+            self._change_energy(-one_third)
+            possible_mate._change_energy(one_third)
 
             return True
 
@@ -418,7 +336,7 @@ class Bot(BotRepresentation):
             return False
 
         self._map.move(x, y, coord_x, coord_y)
-        self._change_energy(-self._move_cost)
+        self._change_energy(-self._jump_cost)
         return True
 
 #TODO PREDATOR EATS EVERYONE

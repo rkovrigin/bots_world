@@ -9,16 +9,16 @@ from world import World
 from queue import Queue
 from threading import Thread
 
-DEFAULT_UNIV_X = 200
+DEFAULT_UNIV_X = 100
 DEFAULT_UNIV_Y = 100
-BOTS_AT_BEGINNING = 1000
+BOTS_AT_BEGINNING = 100
 SCALE = 6
 
 exit_flag = 0
 
 
 def main():
-    queue = Queue(maxsize=0)
+    queue = Queue(maxsize=1)
     world = World(queue, DEFAULT_UNIV_X, DEFAULT_UNIV_Y, BOTS_AT_BEGINNING)
 
     world.start()

@@ -20,7 +20,7 @@ Data = namedtuple("Data", ["cycle", "day", "population", "sun_rate"])
 class World(Thread):
     def __init__(self, queue, x, y, init_bot_amount=100, init_mineral_amount=600):
         Thread.__init__(self)
-        self._map = Map(x, y, wrapper=True)
+        self._map = Map(x, y, wrapper_x=True, wrapper_y=False)
         self._date = 0
         self._cycle = 0
         self._init_bot_amount = init_bot_amount
@@ -45,6 +45,7 @@ class World(Thread):
     def run(self):
         start_time = time()
 
+        # while True:
         while not self._run.is_set():
             if self._map.get_members_amount(Bot) == 0:
                 self._set_bots_randomly(self._init_bot_amount)

@@ -51,6 +51,7 @@ from PyQt5.QtGui import QBrush, QColor, QFont, QLinearGradient, QPainter, QPen, 
 from PyQt5.QtWidgets import QApplication, QGridLayout, QLabel, QOpenGLWidget, QWidget
 from PyQt5.QtWidgets import QPushButton, QCheckBox, QGroupBox, QRadioButton, QVBoxLayout
 
+import config
 from representation import PRINT_STYLE_GREENRED, PRINT_STYLE_GREENRED_ENERGY, PRINT_STYLE_NO_COLOR, \
     PRINT_STYLE_MULTICOLOR, PRINT_STYLE_ENERGY, PRINT_STYLE_NO_DRAWING
 
@@ -94,13 +95,15 @@ class GLWidget(QOpenGLWidget):
         painter.fillRect(event.rect(), self.background)
         painter.save()
 
-        if self._print_style == PRINT_STYLE_NO_COLOR:
+        if config.DRAWING_STYLE == PRINT_STYLE_NO_COLOR:
             for repr, x, y, energy, commands in members:
                 self.drawRect(painter, x, y)
-        elif self._print_style != PRINT_STYLE_NO_DRAWING:
+        elif config.DRAWING_STYLE != PRINT_STYLE_NO_DRAWING:
             for repr, x, y, energy, commands in members:
+                if x < 0 or x >= 200 or y < 0 or y >= 200:
+                    print("OUT OF MAP: [%d:%d]" % (x, y))
                 #if type(repr) in (list, tuple):
-                painter.setBrush(repr[self._print_style].color)
+                painter.setBrush(repr.color)
                 #else:
                 #    painter.setBrush(repr.color)
                 self.drawRect(painter, x, y)
@@ -140,35 +143,49 @@ class WorldWindow(QWidget):
         layout.addWidget(self.openGLLabel_commands)
         self.setLayout(layout)
 
-        self.button_box = self.createRadioButtonGroup()
+        self.button_box = self.create_radio_button_group()
         layout.addWidget(self.button_box)
 
         timer = QTimer(self)
         timer.timeout.connect(self.openGL.animate)
         timer.start(1)
 
-    def createRadioButtonGroup(self):
+    def create_radio_button_group(self):
         groupBox = QGroupBox("View style")
 
         self.radioGreenRed = QRadioButton("Green/Red/Blue")
-        self.radioGreenRed.toggled.connect(self.radioButtonColor)
+        self.radioGreenRed.toggled.connect(self.radio_button_color_is_checked)
 
         self.radioGreenRedEnergy = QRadioButton("Green/Red/Blue energy")
-        self.radioGreenRedEnergy.toggled.connect(self.radioButtonColor)
+        self.radioGreenRedEnergy.toggled.connect(self.radio_button_color_is_checked)
 
         self.radioNoColor = QRadioButton("No color")
-        self.radioNoColor.toggled.connect(self.radioButtonColor)
+        self.radioNoColor.toggled.connect(self.radio_button_color_is_checked)
 
         self.radioMultiColor = QRadioButton("Multicolor")
-        self.radioMultiColor.toggled.connect(self.radioButtonColor)
+        self.radioMultiColor.toggled.connect(self.radio_button_color_is_checked)
 
         self.radioEnergy = QRadioButton("Energy")
-        self.radioEnergy.toggled.connect(self.radioButtonColor)
+        self.radioEnergy.toggled.connect(self.radio_button_color_is_checked)
 
         self.noDrawing = QRadioButton("No drawing")
-        self.noDrawing.toggled.connect(self.radioButtonColor)
+        self.noDrawing.toggled.connect(self.radio_button_color_is_checked)
 
-        self.radioGreenRed.setChecked(True)
+        if config.DRAWING_STYLE == PRINT_STYLE_GREENRED:
+            self.radioGreenRed.setChecked(True)
+        elif config.DRAWING_STYLE == PRINT_STYLE_GREENRED_ENERGY:
+            self.radioGreenRedEnergy.setChecked(True)
+        elif config.DRAWING_STYLE == PRINT_STYLE_NO_COLOR:
+            self.radioNoColor.setChecked(True)
+        elif config.DRAWING_STYLE == PRINT_STYLE_MULTICOLOR:
+            self.radioMultiColor.setChecked(True)
+        elif config.DRAWING_STYLE == PRINT_STYLE_ENERGY:
+            self.radioEnergy.setChecked(True)
+        elif config.DRAWING_STYLE == PRINT_STYLE_NO_DRAWING:
+            self.noDrawing.setChecked(True)
+        else:
+            raise Exception("config.DRAWING_STYLE is set incorrectly")
+
         vbox = QVBoxLayout()
         vbox.addWidget(self.radioGreenRed)
         vbox.addWidget(self.radioGreenRedEnergy)
@@ -180,22 +197,22 @@ class WorldWindow(QWidget):
 
         return groupBox
 
-    def radioButtonColor(self, checked=True):
+    def radio_button_color_is_checked(self, checked=True):
         if not checked:
             return
 
         if self.radioGreenRed.isChecked():
-            self.openGL._print_style = PRINT_STYLE_GREENRED
+            config.DRAWING_STYLE = PRINT_STYLE_GREENRED
         elif self.radioGreenRedEnergy.isChecked():
-            self.openGL._print_style = PRINT_STYLE_GREENRED_ENERGY
+            config.DRAWING_STYLE = PRINT_STYLE_GREENRED_ENERGY
         elif self.radioNoColor.isChecked():
-            self.openGL._print_style = PRINT_STYLE_NO_COLOR
+            config.DRAWING_STYLE = PRINT_STYLE_NO_COLOR
         elif self.radioMultiColor.isChecked():
-            self.openGL._print_style = PRINT_STYLE_MULTICOLOR
+            config.DRAWING_STYLE = PRINT_STYLE_MULTICOLOR
         elif self.radioEnergy.isChecked():
-            self.openGL._print_style = PRINT_STYLE_ENERGY
+            config.DRAWING_STYLE = PRINT_STYLE_ENERGY
         elif self.noDrawing.isChecked():
-            self.openGL._print_style = PRINT_STYLE_NO_DRAWING
+            config.DRAWING_STYLE = PRINT_STYLE_NO_DRAWING
         else:
             raise Exception("No radio button is chosen")
 
