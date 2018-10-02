@@ -36,5 +36,6 @@ class Mineral(MineralRepresentation):
         return bite
 
     def execute_command(self, x, y):
-        if self._energy > 0:
-            self._energy += 1
+        if self._map._wrapper_y:
+            if self._map.is_mineral_at(x, y+1):
+                self._map.move(x, y, x, y+1)

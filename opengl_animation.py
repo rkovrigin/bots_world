@@ -111,7 +111,7 @@ class GLWidget(QOpenGLWidget):
                     print_pattern = (("%d " * 8) + "\n")*8
                     text = print_pattern % tuple(commands)
                     text += "Energy %d" % energy
-                    self._parent.openGLLabel_commands.setText(text)
+                    self._parent.openGLLabel_commands.setText("%d %d" % (x, y))
                     self._click_x = None
                     self._click_y = None
 
