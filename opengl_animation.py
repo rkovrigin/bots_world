@@ -99,21 +99,25 @@ class GLWidget(QOpenGLWidget):
             for repr, x, y, energy, commands in members:
                 self.drawRect(painter, x, y)
         elif config.DRAWING_STYLE != PRINT_STYLE_NO_DRAWING:
-            for repr, x, y, energy, commands in members:
+            for repr, x, y, energy in members:
                 if x < 0 or x >= 200 or y < 0 or y >= 200:
-                    print("OUT OF MAP: [%d:%d]" % (x, y))
+                    print("OUT OF MAP: [%d:%d] {%d}" % (x, y, energy))
                 #if type(repr) in (list, tuple):
                 painter.setBrush(repr.color)
                 #else:
                 #    painter.setBrush(repr.color)
                 self.drawRect(painter, x, y)
-                if x == self._click_x and y == self._click_y and len(commands) > 0:
-                    print_pattern = (("%d " * 8) + "\n")*8
-                    text = print_pattern % tuple(commands)
-                    text += "Energy %d" % energy
-                    self._parent.openGLLabel_commands.setText("%d %d" % (x, y))
-                    self._click_x = None
-                    self._click_y = None
+
+                if x == self._click_x and y == self._click_y:
+                    self._parent.openGLLabel_commands.setText("Coordinates [%d:%d]; Energy {%d}" % (x, y, energy))
+
+                # if x == self._click_x and y == self._click_y and len(commands) > 0:
+                #     print_pattern = (("%d " * 8) + "\n")*8
+                #     text = print_pattern % tuple(commands)
+                #     text += "Energy %d" % energy
+                #     self._parent.openGLLabel_commands.setText("%d %d" % (x, y))
+                #     self._click_x = None
+                #     self._click_y = None
 
         painter.restore()
 

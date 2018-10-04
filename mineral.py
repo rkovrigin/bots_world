@@ -2,6 +2,8 @@ from representation import *
 
 
 class Mineral(MineralRepresentation):
+    _max_energy = 255
+
     def __init__(self, map, energy=255):
         self._energy = energy
         self._commands = []
@@ -16,6 +18,12 @@ class Mineral(MineralRepresentation):
     @property
     def energy(self):
         return self._energy
+
+    @energy.setter
+    def energy(self, energy):
+        self._energy = energy
+        if self._energy > self._max_energy:
+            self._energy = self._max_energy
 
     def die(self):
         self._is_active = False
@@ -36,6 +44,11 @@ class Mineral(MineralRepresentation):
         return bite
 
     def execute_command(self, x, y):
-        if self._map._wrapper_y:
-            if self._map.is_mineral_at(x, y+1):
-                self._map.move(x, y, x, y+1)
+        if self.energy <= 0:
+            self.die()
+        self.energy -= 1
+        if not self._map._wrapper_y:
+            self._map.move_mineral(x, y, x, y + 1)
+            # if not self._map.is_mineral_at(x, y+1):
+            #     self._map.move_mineral(x, y, x, y + 1)
+                # self._map._map_minerals.move(x, y, x, y+1)

@@ -18,7 +18,7 @@ Data = namedtuple("Data", ["cycle", "day", "population", "sun_rate"])
 
 
 class World(Thread):
-    def __init__(self, queue, x, y, init_bot_amount=100, init_mineral_amount=0):
+    def __init__(self, queue, x, y, init_bot_amount=100, init_mineral_amount=100):
         Thread.__init__(self)
         self._map = Map(x, y, wrapper_x=True, wrapper_y=False)
         self._date = 0
@@ -33,11 +33,11 @@ class World(Thread):
 
     def _set_bots_randomly(self, bot_amount):
         for _ in range(bot_amount):
-            self._map.add_bot_in_rand(Bot(self._map))
+            self._map.add_member_in_rand(Bot(self._map))
 
     def _set_minerals_randomly(self, mineral_amount):
         for _ in range(mineral_amount):
-            self._map.add_bot_in_rand(Mineral(self._map), y=randrange(self._map.y - 15, self._map.y))
+            self._map.add_member_in_rand(Mineral(self._map, energy=30), y=randrange(self._map.y - 15, self._map.y))
 
     def finish_him(self):
         self._run.set()
@@ -45,13 +45,12 @@ class World(Thread):
     def run(self):
         start_time = time()
 
-        # while True:
         while not self._run.is_set():
             if self._map.get_bots_amount() == 0:
                 self._set_bots_randomly(self._init_bot_amount)
 
-            sun_rate = sun_rates[self._date//DAYS_IN_MONTH]
-            self._map.sun_rate = sun_rate
+            # sun_rate = sun_rates[self._date//DAYS_IN_MONTH]
+            # self._map.sun_rate = sun_rate
 
             self._map.cycle()
 

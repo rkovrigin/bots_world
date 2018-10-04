@@ -4,11 +4,12 @@ from random import randint, randrange
 
 from mineral import Mineral
 from parent_map import ParentMap, outside_map, my_mod
+from sun_map import SunMap
 
 from bot import Bot
 
 class Map(object):
-    __slots__ = ["_x", "_y", "_map_bots", "_map_minerals", "_sun_rate", "_wrapper_x", "_wrapper_y", "_outside_map"]
+    __slots__ = ["_x", "_y", "_map_bots", "_map_minerals", "_sun_rate", "_wrapper_x", "_wrapper_y", "_outside_map", "_sun_map"]
 
     def __init__(self, x, y, wrapper_x=True, wrapper_y=True):
         self._x = x
@@ -17,16 +18,17 @@ class Map(object):
         self._wrapper_y = wrapper_y
         self._map_bots = ParentMap(x, y, wrapper_x, wrapper_y)
         self._map_minerals = ParentMap(x, y, wrapper_x, wrapper_y)
+        self._sun_map = SunMap(x, y, 0, 50)
         self._outside_map = outside_map
 
-    @property
-    def sun_rate(self):
-        return self._sun_rate
+    def sun_rate(self, x, y):
+        return self._sun_map.sun_rate_at(x, y)
 
-    # TODO: create a map for sun
-    @sun_rate.setter
-    def sun_rate(self, sun_rate):
-        self._sun_rate = sun_rate
+    # # TODO: create a map for sun
+    # @sun_rate.setter
+    # def sun_rate(self, sun_rate):
+    #     self._sun_rate = sun_rate
+    #     # self._sun_rate = self._sun_map.sun_rate_at(x, y)
 
     @property
     def x(self):
@@ -39,24 +41,54 @@ class Map(object):
     def is_empty_from_bot(self, x, y):
         return self._map_bots.is_empty(x, y)
 
-    def add_bot_in_pos(self, member, x, y):
-        return self._map_bots.add_in_pos(member, x, y)
+    def add_member_in_pos(self, member, x, y):
+        if isinstance(member, Bot):
+            return self._map_bots.add_in_pos(member, x, y)
+        elif isinstance(member, Mineral):
+            return self._map_minerals.add_in_pos(member, x, y)
+        else:
+            raise Exception("No such kind")
 
-    def add_bot_in_rand(self, member, x=None, y=None):
-        return self._map_bots.add_in_rand(member, x, y)
+    def add_member_in_rand(self, member, x=None, y=None):
+        if isinstance(member, Bot):
+            return self._map_bots.add_in_rand(member, x, y)
+        elif isinstance(member, Mineral):
+            return self._map_minerals.add_in_rand(member, x, y)
+        else:
+            raise Exception("No such kind")
 
     def move_bot(self, x, y, new_x, new_y):
         self._map_bots.move(x, y, new_x, new_y)
 
-    def remove_bot(self, x, y):
-        bot = self._map_bots.at(x,y)
+    def move_mineral(self, x, y, new_x, new_y):
+        current_position = self._map_minerals.at(x, y)
+        new_position = self._map_minerals.at(new_x, new_y)
+
+        if new_position is None:
+            return self._map_minerals.move(x, y, new_x, new_y)
+        elif isinstance(new_position, Mineral):
+
+            sum_energy = current_position.energy + new_position.energy
+            new_position.energy = min(sum_energy, current_position._max_energy)
+            current_position.energy = max(0, sum_energy - new_position.energy)
+            if current_position.energy == 0:
+                current_position.die()
+
+    def remove_member(self, member, x, y):
         mineral = self._map_minerals.at(x, y)
-        if bot and bot.energy > 0:
-            if mineral:
-                mineral.energy += bot.energy
+
+        if isinstance(member, Bot):
+            if member.energy > 0:
+                if isinstance(mineral, Mineral):
+                    mineral.energy += member.energy
+                else:
+                    self._map_minerals.add_in_pos(Mineral(self, member.energy), x, y)
+
+                self._map_bots.remove(x, y)
             else:
-                self._map_minerals.add_in_pos(Mineral(self._map_minerals, bot.energy), x, y)
-        self._map_bots.remove(x, y)
+                self._map_bots.remove(x, y)
+        elif isinstance(member, Mineral):
+            self._map_minerals.remove(x, y)
 
     def is_mineral_at(self, x, y):
         return self._map_minerals.at(x, y)
@@ -74,10 +106,11 @@ class Map(object):
         for member, x, y in chain(self._map_bots.iterate_members(), self._map_minerals.iterate_members()):
             member.execute_command(x, y)
             if not member.is_alive:
-                self.remove_bot(x, y)
+                self.remove_member(member, x, y)
 
     def create_representation_snapshot(self):
-        return [[member.print_style(), x, y, member.energy, member._commands] for (x, y), member in self._map_bots._map_items.items()]
+        return [[member.print_style(), x, y, member.energy]
+                for (x, y), member in chain(self._map_minerals._map_items.items(), self._map_bots._map_items.items())]
 
 
 class Map2(object):

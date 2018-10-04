@@ -120,7 +120,11 @@ class BotRepresentation(object):
             return UNKNOWN_BOT_COLOR
 
     def set_scene_energy(self):
-        return Representation(255, 0, 0, self.energy)
+        if self.energy <= 0:
+            energy = 0
+        else:
+            energy = self.energy
+        return Representation(255, 255-energy, 0, energy)
 
     def print_style(self, print_style_id=None):
         if config.DRAWING_STYLE == PRINT_STYLE_GREENRED:

@@ -70,6 +70,9 @@ class ParentMap(object):
             y = my_mod(y, self.y)
             new_y = my_mod(new_y, self.y)
 
+        if self.at(new_x, new_y) is outside_map:
+            return
+
         self._map_items[(new_x, new_y)] = self._map_items[(x, y)]
         del self._map_items[(x, y)]
 
