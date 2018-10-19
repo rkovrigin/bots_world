@@ -66,11 +66,11 @@ class Bot(BotRepresentation):
         self._kind = 0
         self._map = map
         self._bitmap = 0
-        self._day_cost = randrange(1, 10)
+        self._day_cost = 0 # randrange(1, 4)
         self._bite_mineral = randrange(20, 40)
-        self._sun_rate = randrange(4, 20)
+        self._sun_rate = randrange(1, 40)
         self._copy_cost = 150
-        self._die_from_age = True
+        self._die_from_age = False
 
         if copy_commands is None:
             for i in range(self._size):
@@ -81,9 +81,6 @@ class Bot(BotRepresentation):
             self._commands[4] = GET_ENERGY_FROM_SUN
 
             self._commands[-1] = CREATE_COPY
-            self._commands[-2] = CREATE_COPY
-            self._commands[-3] = CREATE_COPY
-            self._commands[-4] = CREATE_COPY
         else:
             self._commands = copy_commands[:]
 
@@ -154,18 +151,18 @@ class Bot(BotRepresentation):
         if self._energy < MAX_ENERGY:
             return
 
-        for i in range(1, 2):
-            coord_x, coord_y = self._find_direction_cell(x, y, pointer_step=i)
-            if self._map.is_bot_at(coord_x, coord_y) is None:
+        for coord_x, coord_y in get_cells_around_list:
+            # coord_x, coord_y = self._find_direction_cell(x, y, pointer_step=i)
+            if self._map.is_bot_at(x + coord_x, y + coord_y) is None:
                 break
         else:
-            # self.die("Can't create copy")
+            self.die("Can't create copy")
             return False
 
         if self._energy >= 200:
             self._change_energy(-self._copy_cost)
             child = Bot(self._map, energy=50, mutant=mutate, copy_commands=self._commands)
-            self._map.add_member_in_pos(child, coord_x, coord_y)
+            self._map.add_member_in_pos(child, coord_x + x, coord_y + y)
             child._move_cost = max(1, self._move_cost + randrange(-1, 2))
             child._max_age = max(1, self._max_age + randrange(-1, 2))
             child._sun_rate = max(1, self._sun_rate + randrange(-1, 2))
@@ -215,7 +212,8 @@ class Bot(BotRepresentation):
             self.die("choking")
 
     def receive_energy(self, sun_rate):
-        energy = min(self._sun_rate, sun_rate)
+        # energy = min(self._sun_rate, sun_rate)
+        energy = sun_rate
 
         if self._kind == BOT_VEGAN_KIND:
             self._change_energy(energy*2)
@@ -311,7 +309,7 @@ class Bot(BotRepresentation):
         if cmd == GET_ENERGY_FROM_SUN:
             self.receive_energy(self._map.sun_rate(x, y))
         elif cmd == CREATE_COPY:
-            mutate = False
+            mutate = True
             if randint(0, 3) == 0:
                 mutate = True
             self.create_copy(x, y, mutate=mutate)
