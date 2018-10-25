@@ -37,7 +37,7 @@ class World(Thread):
 
     def _set_minerals_randomly(self, mineral_amount):
         for _ in range(mineral_amount):
-            self._map.add_member_in_rand(Mineral(self._map, energy=30), y=randrange(self._map.y - 15, self._map.y))
+            self._map.add_member_in_rand(Mineral(self._map, energy=3000), y=randrange(self._map.y - 15, self._map.y))
 
     def finish_him(self):
         self._run.set()
@@ -61,7 +61,7 @@ class World(Thread):
 
             self._cycle += 1
 
-            passed_time = self._cycle / (time() - start_time)
+            # passed_time = self._cycle / (time() - start_time)
             # print(self._cycle, passed_time)
 
             self.queue.put(self._map.create_representation_snapshot())

@@ -1,3 +1,4 @@
+from collections import namedtuple
 from random import randrange, randint, choice
 from mineral import Mineral
 from representation import *
@@ -16,6 +17,10 @@ FALLOW_VICTIM         = 56
 
 __evolution_probability__ = 4
 __life_length__ = 100
+
+"""
+TODO: MAKE COMAND OF GETTING ENERGY; and with this command it can get energy only from one source!
+"""
 
 MASK = 0b111111
 
@@ -50,7 +55,7 @@ how many bots has eaten
 class Bot(BotRepresentation):
     __slots__ = ["_mutant", "_energy", "_size", "_commands", "_age", "_is_alive", "_move_cost", "_day_cost",
                  "_current_command", "_max_age", "_kind", "_sun_rate", "_map", "_bite_mineral",
-                 "_bitmap", "_jump_cost", "_copy_cost", "_die_from_age"]
+                 "_bitmap", "_jump_cost", "_copy_cost", "_die_from_age", "_color"]
 
     def __init__(self, map, energy=100, mutant=False, copy_commands=None):
         self._mutant = mutant
@@ -66,21 +71,24 @@ class Bot(BotRepresentation):
         self._kind = 0
         self._map = map
         self._bitmap = 0
-        self._day_cost = 0 # randrange(1, 4)
+        self._day_cost = randrange(1, 2)
         self._bite_mineral = randrange(20, 40)
         self._sun_rate = randrange(1, 40)
         self._copy_cost = 150
         self._die_from_age = False
+        self._color = Representation(0, 0, 0)
 
         if copy_commands is None:
             for i in range(self._size):
-                self._commands[i] = randrange(0, self._size)
-            self._commands[0] = GET_ENERGY_FROM_SUN
-            self._commands[2] = GET_ENERGY_FROM_SUN
-            self._commands[3] = GET_ENERGY_FROM_SUN
-            self._commands[4] = GET_ENERGY_FROM_SUN
-
-            self._commands[-1] = CREATE_COPY
+                self._commands[i] = choice((0, GET_ENERGY_FROM_SUN, CREATE_COPY, EAT_ANOTHER_BOT, EAT_MINERAL))
+            # for i in range(self._size):
+            #     self._commands[i] = randrange(0, self._size)
+            # self._commands[0] = GET_ENERGY_FROM_SUN
+            # self._commands[2] = GET_ENERGY_FROM_SUN
+            # self._commands[3] = GET_ENERGY_FROM_SUN
+            # self._commands[4] = GET_ENERGY_FROM_SUN
+            #
+            # self._commands[-1] = CREATE_COPY
         else:
             self._commands = copy_commands[:]
 
@@ -159,19 +167,19 @@ class Bot(BotRepresentation):
             self.die("Can't create copy")
             return False
 
-        if self._energy >= 200:
-            self._change_energy(-self._copy_cost)
-            child = Bot(self._map, energy=50, mutant=mutate, copy_commands=self._commands)
-            self._map.add_member_in_pos(child, coord_x + x, coord_y + y)
-            child._move_cost = max(1, self._move_cost + randrange(-1, 2))
-            child._max_age = max(1, self._max_age + randrange(-1, 2))
-            child._sun_rate = max(1, self._sun_rate + randrange(-1, 2))
-            child._bite_mineral = max(1, self._bite_mineral + randrange(-1, 2))
-            child._jump_cost = max(1, self._jump_cost + randrange(-1, 2))
-            child._day_cost = max(1, self._day_cost + randrange(-1, 2))
-            child._copy_cost = max(50, self._copy_cost + randrange(-1, 2))
-            return True
-        return False
+        self._change_energy(-self._copy_cost)
+        child = Bot(self._map, energy=50, mutant=mutate, copy_commands=self._commands)
+        self._map.add_member_in_pos(child, coord_x + x, coord_y + y)
+        child._move_cost = max(1, self._move_cost + randrange(-1, 2))
+        child._max_age = max(1, self._max_age + randrange(-1, 2))
+        child._sun_rate = max(1, self._sun_rate + randrange(-1, 2))
+        child._bite_mineral = max(1, self._bite_mineral + randrange(-1, 2))
+        child._jump_cost = max(1, self._jump_cost + randrange(-1, 2))
+        child._day_cost = max(1, self._day_cost + randrange(-1, 2))
+        child._copy_cost = max(50, self._copy_cost + randrange(-1, 2))
+        child._color = self._color
+
+        return True
 
     def _find_direction_cell(self, x, y, pointer_step=1, cells=get_cells_around_list):
         next_cp = self._next_command_pointer(pointer_step)
@@ -220,6 +228,8 @@ class Bot(BotRepresentation):
         else:
             self._change_energy(energy)
 
+        self._color.increaseGreen()
+
         # if sun_rate//2 > self._sun_rate:
         #     self.die("Sun burned me")
         # else:
@@ -236,8 +246,8 @@ class Bot(BotRepresentation):
         #     return False
 
         for _x, _y in get_cells_around_list_plus_self:
-            potential_mineral = self._map.is_mineral_at(_x, _y)
-            if isinstance(potential_mineral, Bot):
+            potential_mineral = self._map.is_mineral_at(x + _x, y + _y)
+            if isinstance(potential_mineral, Mineral):
                 break
         else:
             return False
@@ -250,6 +260,8 @@ class Bot(BotRepresentation):
         bite = potential_mineral.bite_piece(bite_mineral_rating)
         self._change_energy(bite)
         # print("Have bitten %d size piece at [%d:%d]" % (bite, coord_x, coord_y))
+
+        self._color.increaseBlue()
         return True
 
     def look_around(self):
@@ -282,6 +294,8 @@ class Bot(BotRepresentation):
 
         self._change_energy(possible_victim._energy)
         possible_victim.die("EATEN BY PREDATOR REASON")
+
+        self._color.increaseRed()
         return True
 
     def die(self, reason):
@@ -329,7 +343,7 @@ class Bot(BotRepresentation):
             self.die_of_choking(x, y)
         else:
             # self._current_command = cmd
-            self._current_command = self._next_command_pointer(max(1, cmd))
+            self._current_command = self._next_command_pointer(min(1, cmd))
             self._change_energy(-self._day_cost)
             # self._current_command = self._next_command_pointer()
 

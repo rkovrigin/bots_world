@@ -18,7 +18,7 @@ class Map(object):
         self._wrapper_y = wrapper_y
         self._map_bots = ParentMap(x, y, wrapper_x, wrapper_y)
         self._map_minerals = ParentMap(x, y, wrapper_x, wrapper_y)
-        self._sun_map = SunMap(x, y, 0, 30)
+        self._sun_map = SunMap(x, y, 10, 0)
         self._outside_map = outside_map
 
     def sun_rate(self, x, y):
@@ -80,10 +80,10 @@ class Map(object):
         if isinstance(member, Bot):
             if member.energy > 0:
                 if isinstance(mineral, Mineral):
-                    mineral.energy += member.energy
+                    mineral.energy += min(member.energy + mineral.energy, mineral._max_energy)
                 else:
-                    self._map_minerals.add_in_pos(Mineral(self, 10), x, y)
-                    # self._map_minerals.add_in_pos(Mineral(self, member.energy), x, y)
+                    # self._map_minerals.add_in_pos(Mineral(self, 10), x, y)
+                    self._map_minerals.add_in_pos(Mineral(self, member.energy), x, y)
 
                 self._map_bots.remove(x, y)
             else:

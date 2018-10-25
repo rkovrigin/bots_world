@@ -7,6 +7,26 @@ NO_TRANSPARENCY = 255
 class Representation(object):
     def __init__(self, r, g, b, alpha=NO_TRANSPARENCY):
         self._color = QColor(r, g, b, alpha)
+        self._increase = 1
+        self._decrease = 1
+
+    def increaseRed(self):
+        self._color.setRed(min(self.color.red() + self._increase, 255))
+        self._color.setGreen(max(self.color.green() - self._decrease, 0))
+        self._color.setBlue(max(self.color.blue() - self._decrease, 0))
+
+    def increaseGreen(self):
+        self._color.setRed(max(self.color.red() - self._decrease, 0))
+        self._color.setGreen(min(self.color.green() + self._increase, 255))
+        self._color.setBlue(max(self.color.blue() - self._decrease, 0))
+
+    def increaseBlue(self):
+        self._color.setRed(max(self.color.red() - self._decrease, 0))
+        self._color.setGreen(max(self.color.green() - self._decrease, 0))
+        self._color.setBlue(min(self.color.blue() + self._increase, 255))
+
+    def setAlpha(self, alpha):
+        self._color.setAlpha(alpha)
 
     @property
     def color(self):
@@ -21,7 +41,7 @@ ORANGE = Representation(0xff, 0x91, 0)
 LIGHT_BLUE = Representation(0x00, 0xff, 0xff)
 PURPLE = Representation(0xb7, 0x00, 0xff)
 GRAY = GREY = UNKNOWN_BOT_COLOR = Representation(0x7a, 0x7a, 0x7a)
-MAGENTA = Representation(0xff, 0x00, 0xff)
+MAGENTA = Representation(0xff, 0x00, 0xff, 100)
 UNKNOWN_MINERAL_COLOR = Representation(0xff, 0x00, 0xff, 50)
 
 BOT_PREDATOR_KIND = 0xff0000
@@ -75,14 +95,16 @@ class MineralRepresentation(object):
 
 class BotRepresentation(object):
     def set_scene(self):
-        if self.kind == BOT_PREDATOR_KIND:
-            return RED
-        elif self.kind == BOT_VEGAN_KIND:
-            return GREEN
-        elif self.kind == BOT_MINERAL_KIND:
-            return BLUE
-        else:
-            return UNKNOWN_MINERAL_COLOR
+        self._color.setAlpha(200)
+        return self._color
+        # if self.kind == BOT_PREDATOR_KIND:
+        #     return RED
+        # elif self.kind == BOT_VEGAN_KIND:
+        #     return GREEN
+        # elif self.kind == BOT_MINERAL_KIND:
+        #     return BLUE
+        # else:
+        #     return UNKNOWN_MINERAL_COLOR
 
     def set_scene_transparency(self):
         if self.energy > 255:
