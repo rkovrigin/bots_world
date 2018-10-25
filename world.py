@@ -33,11 +33,11 @@ class World(Thread):
 
     def _set_bots_randomly(self, bot_amount):
         for _ in range(bot_amount):
-            self._map.add_member_in_rand(Bot(self._map))
+            self._map.add_member_in_rand(Bot(self._map), y=randrange(0, self._map._y/2))
 
     def _set_minerals_randomly(self, mineral_amount):
         for _ in range(mineral_amount):
-            self._map.add_member_in_rand(Mineral(self._map, energy=3000), y=randrange(self._map.y - 15, self._map.y))
+            self._map.add_member_in_rand(Mineral(self._map, energy=30000), y=randrange(self._map.y - 15, self._map.y))
 
     def finish_him(self):
         self._run.set()

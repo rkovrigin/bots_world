@@ -272,12 +272,14 @@ class Bot(BotRepresentation):
             coord_x, coord_y = self._find_direction_cell(x, y, pointer_step=i)
             possible_victim = self._map.is_bot_at(coord_x, coord_y)
 
-            if self._bitmap == BOT_PREDATOR_KIND:
-                if possible_victim is not None and isinstance(possible_victim, Bot) and possible_victim._bitmap != BOT_PREDATOR_KIND:
-                    break
-            elif self._bitmap & BOT_PREDATOR_KIND:
-                if possible_victim is not None and isinstance(possible_victim, Bot) and (possible_victim._bitmap & BOT_PREDATOR_KIND) == 0:
-                    break
+            # if self._bitmap == BOT_PREDATOR_KIND:
+            #     if possible_victim is not None and isinstance(possible_victim, Bot) and possible_victim._bitmap != BOT_PREDATOR_KIND:
+            #         break
+            # elif self._bitmap & BOT_PREDATOR_KIND:
+            #     if possible_victim is not None and isinstance(possible_victim, Bot) and (possible_victim._bitmap & BOT_PREDATOR_KIND) == 0:
+            #         break
+            if isinstance(possible_victim, Bot) and not self.is_same_kind(possible_victim):
+                break
         else:
             return False
 
@@ -323,7 +325,7 @@ class Bot(BotRepresentation):
         if cmd == GET_ENERGY_FROM_SUN:
             self.receive_energy(self._map.sun_rate(x, y))
         elif cmd == CREATE_COPY:
-            mutate = True
+            mutate = False
             if randint(0, 3) == 0:
                 mutate = True
             self.create_copy(x, y, mutate=mutate)
@@ -351,12 +353,15 @@ class Bot(BotRepresentation):
         for i in range(1, 2):
             coord_x, coord_y = self._find_direction_cell(x, y, pointer_step=i)
             possible_mate = self._map.is_bot_at(coord_x, coord_y)
-            if isinstance(possible_mate, Bot) and possible_mate._bitmap == self._bitmap:
-                break
+            if isinstance(possible_mate, Bot):
+                if self.is_same_kind(possible_mate):
+                    break
+            # if isinstance(possible_mate, Bot) and possible_mate._bitmap == self._bitmap:
+            #     break
         else:
             return False
 
-        assert self._bitmap == possible_mate._bitmap
+        # assert self._bitmap == possible_mate._bitmap
 
         if self._energy//3 >= possible_mate._energy:
             one_third = self._energy//3
@@ -375,4 +380,10 @@ class Bot(BotRepresentation):
 
         self._map.move_bot(x, y, coord_x, coord_y)
         self._change_energy(-self._jump_cost)
+        return True
+
+    def is_same_kind(self, member):
+        for i in range(self._size):
+            if self._commands[i] != member._commands[i]:
+                return False
         return True

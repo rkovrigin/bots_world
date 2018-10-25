@@ -7,8 +7,8 @@ NO_TRANSPARENCY = 255
 class Representation(object):
     def __init__(self, r, g, b, alpha=NO_TRANSPARENCY):
         self._color = QColor(r, g, b, alpha)
-        self._increase = 1
-        self._decrease = 1
+        self._increase = 5
+        self._decrease = 4
 
     def increaseRed(self):
         self._color.setRed(min(self.color.red() + self._increase, 255))

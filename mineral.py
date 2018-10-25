@@ -2,7 +2,7 @@ from representation import *
 
 
 class Mineral(MineralRepresentation):
-    _max_energy = 3000
+    _max_energy = 30000
 
     def __init__(self, map, energy=255):
         self._energy = energy
@@ -46,7 +46,7 @@ class Mineral(MineralRepresentation):
     def execute_command(self, x, y):
         if self.energy <= 0:
             self.die()
-        self.energy += 1
+        self.energy += 10
         if not self._map._wrapper_y:
             self._map.move_mineral(x, y, x, y + 1)
             # if not self._map.is_mineral_at(x, y+1):
