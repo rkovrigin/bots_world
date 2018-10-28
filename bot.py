@@ -18,6 +18,8 @@ FALLOW_VICTIM         = 56
 __evolution_probability__ = 4
 __life_length__ = 100
 
+legal_commands = [SHARE_ENERGY, EAT_MINERAL, GET_ENERGY_FROM_SUN, EAT_ANOTHER_BOT, CREATE_COPY, MOVE, JUMP]
+
 """
 TODO: MAKE COMAND OF GETTING ENERGY; and with this command it can get energy only from one source!
 """
@@ -55,7 +57,7 @@ how many bots has eaten
 class Bot(BotRepresentation):
     __slots__ = ["_mutant", "_energy", "_size", "_commands", "_age", "_is_alive", "_move_cost", "_day_cost",
                  "_current_command", "_max_age", "_kind", "_sun_rate", "_map", "_bite_mineral",
-                 "_bitmap", "_jump_cost", "_copy_cost", "_die_from_age", "_color"]
+                 "_bitmap", "_jump_cost", "_copy_cost", "_die_from_age", "_color", "_attempts"]
 
     def __init__(self, map, energy=100, mutant=False, copy_commands=None):
         self._mutant = mutant
@@ -77,11 +79,16 @@ class Bot(BotRepresentation):
         self._copy_cost = 150
         self._die_from_age = False
         self._color = Representation(0, 0, 0)
+        self._attempts = 8
 
         if copy_commands is None:
             for i in range(self._size):
-                self._commands[i] = choice((0, GET_ENERGY_FROM_SUN, CREATE_COPY, EAT_ANOTHER_BOT, EAT_MINERAL))
-            # for i in range(self._size):
+                self._commands[i] = choice((0, GET_ENERGY_FROM_SUN, CREATE_COPY, EAT_ANOTHER_BOT, EAT_MINERAL, MOVE, JUMP, randrange(0, self._size)))
+                # if i % 2:
+                #     self._commands[i] = randrange(0, 64)
+                # else:
+                #     self._commands[i] = CREATE_COPY
+                    # for i in range(self._size):
             #     self._commands[i] = randrange(0, self._size)
             # self._commands[0] = GET_ENERGY_FROM_SUN
             # self._commands[2] = GET_ENERGY_FROM_SUN
@@ -156,20 +163,29 @@ class Bot(BotRepresentation):
         return next_cmd
 
     def create_copy(self, x, y, mutate=False):
-        if self._energy < MAX_ENERGY:
+        if self._energy < MAX_ENERGY-55:
             return
 
-        for coord_x, coord_y in get_cells_around_list:
-            # coord_x, coord_y = self._find_direction_cell(x, y, pointer_step=i)
-            if self._map.is_bot_at(x + coord_x, y + coord_y) is None:
+        for i in range(self._attempts):
+            _x, _y = self._find_direction_cell(x=x, y=y, pointer_step=i)
+            if self._map.is_bot_at(_x, _y) is None:
                 break
         else:
             self.die("Can't create copy")
             return False
 
+        # for coord_x, coord_y in get_cells_around_list:
+        #     # coord_x, coord_y = self._find_direction_cell(x, y, pointer_step=i)
+        #     if self._map.is_bot_at(x + coord_x, y + coord_y) is None:
+        #         break
+        # else:
+        #     self.die("Can't create copy")
+        #     return False
+
         self._change_energy(-self._copy_cost)
         child = Bot(self._map, energy=50, mutant=mutate, copy_commands=self._commands)
-        self._map.add_member_in_pos(child, coord_x + x, coord_y + y)
+        # self._map.add_member_in_pos(child, coord_x + x, coord_y + y)
+        self._map.add_member_in_pos(child, _x, _y)
         child._move_cost = max(1, self._move_cost + randrange(-1, 2))
         child._max_age = max(1, self._max_age + randrange(-1, 2))
         child._sun_rate = max(1, self._sun_rate + randrange(-1, 2))
@@ -177,7 +193,7 @@ class Bot(BotRepresentation):
         child._jump_cost = max(1, self._jump_cost + randrange(-1, 2))
         child._day_cost = max(1, self._day_cost + randrange(-1, 2))
         child._copy_cost = max(50, self._copy_cost + randrange(-1, 2))
-        child._color = self._color
+        # child._color = self._color
 
         return True
 
@@ -220,89 +236,64 @@ class Bot(BotRepresentation):
             self.die("choking")
 
     def receive_energy(self, sun_rate):
-        # energy = min(self._sun_rate, sun_rate)
-        energy = sun_rate
-
-        if self._kind == BOT_VEGAN_KIND:
-            self._change_energy(energy*2)
-        else:
-            self._change_energy(energy)
-
-        self._color.increaseGreen()
-
-        # if sun_rate//2 > self._sun_rate:
-        #     self.die("Sun burned me")
-        # else:
-        #     energy = min(self._sun_rate, sun_rate)
-        #     self._change_energy(energy)
+        self._change_energy(sun_rate)
+        if sun_rate > 0:
+            self._color.increaseGreen(sun_rate)
 
     def eat_mineral(self, x, y):
-        # for i in range(1, 5):
-        #     coord_x, coord_y = self._find_direction_cell(x, y, pointer_step=i, cells=get_cells_around_list_plus_self)
-        #     potential_mineral = self._map.is_mineral_at(coord_x, coord_y)
-        #     if isinstance(potential_mineral, Bot):
-        #         break
-        # else:
-        #     return False
-
-        for _x, _y in get_cells_around_list_plus_self:
-            potential_mineral = self._map.is_mineral_at(x + _x, y + _y)
+        for i in range(self._attempts):
+            _x, _y = self._find_direction_cell(x=x, y=y, pointer_step=i, cells=get_cells_around_list_plus_self)
+            potential_mineral = self._map.is_mineral_at(_x, _y)
             if isinstance(potential_mineral, Mineral):
                 break
         else:
             return False
 
-        if self._kind == BOT_MINERAL_KIND:
-            bite_mineral_rating = self._bite_mineral*2
+        # for _x, _y in get_cells_around_list_plus_self:
+        #     potential_mineral = self._map.is_mineral_at(x + _x, y + _y)
+        #     if isinstance(potential_mineral, Mineral):
+        #         break
+        # else:
+        #     return False
+
+        bite = potential_mineral.bite_piece(self._bite_mineral)
+        if bite > 0:
+            self._change_energy(bite)
+            self._color.increaseBlue(bite)
         else:
-            bite_mineral_rating = self._bite_mineral
+            print("No mineral to bite %d" % int(bite))
 
-        bite = potential_mineral.bite_piece(bite_mineral_rating)
-        self._change_energy(bite)
-        # print("Have bitten %d size piece at [%d:%d]" % (bite, coord_x, coord_y))
-
-        self._color.increaseBlue()
         return True
 
     def look_around(self):
         pass
 
     def eat_another_bot(self, x, y):
-        for i in range(1, 9):
-            coord_x, coord_y = self._find_direction_cell(x, y, pointer_step=i)
-            possible_victim = self._map.is_bot_at(coord_x, coord_y)
-
-            # if self._bitmap == BOT_PREDATOR_KIND:
-            #     if possible_victim is not None and isinstance(possible_victim, Bot) and possible_victim._bitmap != BOT_PREDATOR_KIND:
-            #         break
-            # elif self._bitmap & BOT_PREDATOR_KIND:
-            #     if possible_victim is not None and isinstance(possible_victim, Bot) and (possible_victim._bitmap & BOT_PREDATOR_KIND) == 0:
-            #         break
+        for i in range(self._attempts):
+            _x, _y = self._find_direction_cell(x=x, y=y, pointer_step=i)
+            possible_victim = self._map.is_bot_at(_x, _y)
             if isinstance(possible_victim, Bot) and not self.is_same_kind(possible_victim):
                 break
         else:
             return False
 
-        # if isinstance(possible_victim, Bot):
-        #     if possible_victim._kind == BOT_PREDATOR_KIND:
-        #         return False
-
-        # # TODO: Find out correct rule for that
-        # if self._energy < possible_victim._energy/4:
+        # for _x, _y in get_cells_around_list:
+        #     possible_victim = self._map.is_bot_at(x + _x, y + _y)
+        #     if isinstance(possible_victim, Bot) and not self.is_same_kind(possible_victim):
+        #         break
+        # else:
         #     return False
 
-            # if self._energy < possible_victim._energy/10 or self._age < possible_victim._age:
-            #     return False
-
         self._change_energy(possible_victim._energy)
-        possible_victim.die("EATEN BY PREDATOR REASON")
-
         self._color.increaseRed()
+        # possible_victim._change_energy(-possible_victim._energy)
+
+        possible_victim.die("EATEN BY PREDATOR REASON")
         return True
 
     def die(self, reason):
         self._is_alive = False
-        # self._energy = 0
+        self._energy = 0
         # print(reason)
 
     def execute_command(self, x, y):
@@ -344,24 +335,22 @@ class Bot(BotRepresentation):
         elif cmd == CHOCKING:
             self.die_of_choking(x, y)
         else:
-            # self._current_command = cmd
-            self._current_command = self._next_command_pointer(min(1, cmd))
+            next_command = self._next_command_pointer(1)
+            if self._commands[next_command] in legal_commands:
+                self._current_command = next_command
+            else:
+                self._current_command = self._commands[next_command]
             self._change_energy(-self._day_cost)
-            # self._current_command = self._next_command_pointer()
+
 
     def share_energy_with_same_kind(self, x, y):
-        for i in range(1, 2):
+        for i in range(self._attempts):
             coord_x, coord_y = self._find_direction_cell(x, y, pointer_step=i)
             possible_mate = self._map.is_bot_at(coord_x, coord_y)
-            if isinstance(possible_mate, Bot):
-                if self.is_same_kind(possible_mate):
-                    break
-            # if isinstance(possible_mate, Bot) and possible_mate._bitmap == self._bitmap:
-            #     break
+            if isinstance(possible_mate, Bot) and self.is_same_kind(possible_mate):
+                break
         else:
             return False
-
-        # assert self._bitmap == possible_mate._bitmap
 
         if self._energy//3 >= possible_mate._energy:
             one_third = self._energy//3
@@ -382,8 +371,16 @@ class Bot(BotRepresentation):
         self._change_energy(-self._jump_cost)
         return True
 
-    def is_same_kind(self, member):
+    def is_same_kind_2(self, member):
         for i in range(self._size):
             if self._commands[i] != member._commands[i]:
+                return False
+        return True
+
+    def is_same_kind(self, member):
+        bit = 0
+        for i in range(self._size):
+            bit += bin(self._commands[i] | member._commands[i]).count('1')
+            if bit > 1:
                 return False
         return True

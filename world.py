@@ -33,11 +33,11 @@ class World(Thread):
 
     def _set_bots_randomly(self, bot_amount):
         for _ in range(bot_amount):
-            self._map.add_member_in_rand(Bot(self._map), y=randrange(0, self._map._y/2))
+            self._map.add_member_in_rand(Bot(self._map), y=randrange(0, int(self._map._y/2)))
 
     def _set_minerals_randomly(self, mineral_amount):
         for _ in range(mineral_amount):
-            self._map.add_member_in_rand(Mineral(self._map, energy=30000), y=randrange(self._map.y - 15, self._map.y))
+            self._map.add_member_in_rand(Mineral(self._map, energy=30000), y=randrange(self._map.y-40, self._map.y))
 
     def finish_him(self):
         self._run.set()
@@ -48,6 +48,8 @@ class World(Thread):
         while not self._run.is_set():
             if self._map.get_bots_amount() == 0:
                 self._set_bots_randomly(self._init_bot_amount)
+            if self._map.get_minerals_amount() < self._init_mineral_amount//2:
+                self._set_minerals_randomly(self._init_mineral_amount//2)
 
             # sun_rate = sun_rates[self._date//DAYS_IN_MONTH]
             # self._map.sun_rate = sun_rate
