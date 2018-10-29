@@ -7,6 +7,7 @@ from map import Map
 from bot import Bot
 from mineral import Mineral
 from collections import namedtuple
+import config
 
 SUN_RATE = 10
 DAYS_IN_MONTH = 30
@@ -67,3 +68,4 @@ class World(Thread):
             # print(self._cycle, passed_time)
 
             self.queue.put(self._map.create_representation_snapshot())
+            config.DAY += 1

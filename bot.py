@@ -79,23 +79,11 @@ class Bot(BotRepresentation):
         self._copy_cost = 150
         self._die_from_age = False
         self._color = Representation(0, 0, 0)
-        self._attempts = 8
+        self._attempts = 5
 
         if copy_commands is None:
             for i in range(self._size):
-                self._commands[i] = choice((0, GET_ENERGY_FROM_SUN, CREATE_COPY, EAT_ANOTHER_BOT, EAT_MINERAL, MOVE, JUMP, randrange(0, self._size)))
-                # if i % 2:
-                #     self._commands[i] = randrange(0, 64)
-                # else:
-                #     self._commands[i] = CREATE_COPY
-                    # for i in range(self._size):
-            #     self._commands[i] = randrange(0, self._size)
-            # self._commands[0] = GET_ENERGY_FROM_SUN
-            # self._commands[2] = GET_ENERGY_FROM_SUN
-            # self._commands[3] = GET_ENERGY_FROM_SUN
-            # self._commands[4] = GET_ENERGY_FROM_SUN
-            #
-            # self._commands[-1] = CREATE_COPY
+                self._commands[i] = choice((GET_ENERGY_FROM_SUN, CREATE_COPY, EAT_ANOTHER_BOT, EAT_MINERAL, MOVE, JUMP, randrange(0, self._size)))
         else:
             self._commands = copy_commands[:]
 
@@ -167,7 +155,7 @@ class Bot(BotRepresentation):
             return
 
         for i in range(self._attempts):
-            _x, _y = self._find_direction_cell(x=x, y=y, pointer_step=i)
+            _x, _y = self._find_direction_cell(x=x, y=y, pointer_step=i+1)
             if self._map.is_bot_at(_x, _y) is None:
                 break
         else:
@@ -186,13 +174,24 @@ class Bot(BotRepresentation):
         child = Bot(self._map, energy=50, mutant=mutate, copy_commands=self._commands)
         # self._map.add_member_in_pos(child, coord_x + x, coord_y + y)
         self._map.add_member_in_pos(child, _x, _y)
-        child._move_cost = max(1, self._move_cost + randrange(-1, 2))
-        child._max_age = max(1, self._max_age + randrange(-1, 2))
-        child._sun_rate = max(1, self._sun_rate + randrange(-1, 2))
-        child._bite_mineral = max(1, self._bite_mineral + randrange(-1, 2))
-        child._jump_cost = max(1, self._jump_cost + randrange(-1, 2))
-        child._day_cost = max(1, self._day_cost + randrange(-1, 2))
-        child._copy_cost = max(50, self._copy_cost + randrange(-1, 2))
+
+        if mutate:
+            child._move_cost = max(1, self._move_cost + randrange(-1, 2))
+            child._max_age = max(1, self._max_age + randrange(-1, 2))
+            child._sun_rate = max(1, self._sun_rate + randrange(-1, 2))
+            child._bite_mineral = max(1, self._bite_mineral + randrange(-1, 2))
+            child._jump_cost = max(1, self._jump_cost + randrange(-1, 2))
+            child._day_cost = max(1, self._day_cost + randrange(-1, 2))
+            child._copy_cost = max(50, self._copy_cost + randrange(-1, 2))
+        else:
+            child._move_cost = self._move_cost
+            child._max_age = self._max_age
+            child._sun_rate = self._sun_rate
+            child._bite_mineral = self._bite_mineral
+            child._jump_cost = self._jump_cost
+            child._day_cost = self._day_cost
+            child._copy_cost = self._copy_cost
+
         # child._color = self._color
 
         return True
@@ -242,7 +241,7 @@ class Bot(BotRepresentation):
 
     def eat_mineral(self, x, y):
         for i in range(self._attempts):
-            _x, _y = self._find_direction_cell(x=x, y=y, pointer_step=i, cells=get_cells_around_list_plus_self)
+            _x, _y = self._find_direction_cell(x=x, y=y, pointer_step=i+1, cells=get_cells_around_list_plus_self)
             potential_mineral = self._map.is_mineral_at(_x, _y)
             if isinstance(potential_mineral, Mineral):
                 break
@@ -270,7 +269,7 @@ class Bot(BotRepresentation):
 
     def eat_another_bot(self, x, y):
         for i in range(self._attempts):
-            _x, _y = self._find_direction_cell(x=x, y=y, pointer_step=i)
+            _x, _y = self._find_direction_cell(x=x, y=y, pointer_step=i+1)
             possible_victim = self._map.is_bot_at(_x, _y)
             if isinstance(possible_victim, Bot) and not self.is_same_kind(possible_victim):
                 break
@@ -283,6 +282,9 @@ class Bot(BotRepresentation):
         #         break
         # else:
         #     return False
+
+        if possible_victim.energy/2 > self.energy:
+            return False
 
         self._change_energy(possible_victim._energy)
         self._color.increaseRed()
@@ -345,7 +347,7 @@ class Bot(BotRepresentation):
 
     def share_energy_with_same_kind(self, x, y):
         for i in range(self._attempts):
-            coord_x, coord_y = self._find_direction_cell(x, y, pointer_step=i)
+            coord_x, coord_y = self._find_direction_cell(x, y, pointer_step=i+1)
             possible_mate = self._map.is_bot_at(coord_x, coord_y)
             if isinstance(possible_mate, Bot) and self.is_same_kind(possible_mate):
                 break
@@ -380,7 +382,7 @@ class Bot(BotRepresentation):
     def is_same_kind(self, member):
         bit = 0
         for i in range(self._size):
-            bit += bin(self._commands[i] | member._commands[i]).count('1')
+            bit += bin(self._commands[i] ^ member._commands[i]).count('1')
             if bit > 1:
                 return False
         return True

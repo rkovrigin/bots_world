@@ -2,6 +2,7 @@ from collections import defaultdict
 from itertools import chain
 from random import randint, randrange
 
+import config
 from mineral import Mineral
 from parent_map import ParentMap, outside_map, my_mod
 from sun_map import SunMap
@@ -18,7 +19,7 @@ class Map(object):
         self._wrapper_y = wrapper_y
         self._map_bots = ParentMap(x, y, wrapper_x, wrapper_y)
         self._map_minerals = ParentMap(x, y, wrapper_x, wrapper_y)
-        self._sun_map = SunMap(x, y, 20, 0)
+        self._sun_map = SunMap(x, y, 10, 0)
         self._outside_map = outside_map
 
     def sun_rate(self, x, y):
@@ -112,6 +113,7 @@ class Map(object):
                 self.remove_member(member, x, y)
 
     def create_representation_snapshot(self):
+        config.BOTS = len(self._map_bots)
         return [[member.print_style(), x, y, member.energy]
                 for (x, y), member in chain(self._map_minerals._map_items.items(), self._map_bots._map_items.items())]
 

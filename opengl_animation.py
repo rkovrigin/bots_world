@@ -84,7 +84,7 @@ class GLWidget(QOpenGLWidget):
         painter.setRenderHint(QPainter.Antialiasing)
         self._members = self._queue.get()
         fps = 666
-        self._parent.openGLLabel.setText("Frames: %d; Bots: %d; FPS: %f" % (self._queue.qsize(), len(self._members), fps))
+        self._parent.openGLLabel.setText("Frames: %d; Bots: %d; Day: %d" % (self._queue.qsize(), config.BOTS, config.DAY))
         self.paint(painter, event, self._members)
         painter.end()
 
