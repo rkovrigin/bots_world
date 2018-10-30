@@ -100,8 +100,8 @@ class GLWidget(QOpenGLWidget):
                 self.drawRect(painter, x, y)
         elif config.DRAWING_STYLE != PRINT_STYLE_NO_DRAWING:
             for repr, x, y, energy in members:
-                if x < 0 or x >= 200 or y < 0 or y >= 200:
-                    print("OUT OF MAP: [%d:%d] {%d}" % (x, y, energy))
+                # if x < 0 or x >= 200 or y < 0 or y >= 200:
+                #     print("OUT OF MAP: [%d:%d] {%d}" % (x, y, energy))
                 #if type(repr) in (list, tuple):
                 painter.setBrush(repr.color)
                 #else:

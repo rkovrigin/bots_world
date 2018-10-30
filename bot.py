@@ -283,8 +283,8 @@ class Bot(BotRepresentation):
         # else:
         #     return False
 
-        if possible_victim.energy/2 > self.energy:
-            return False
+        # if possible_victim.energy/2 > self.energy:
+        #     return False
 
         self._change_energy(possible_victim._energy)
         self._color.increaseRed()
@@ -354,14 +354,19 @@ class Bot(BotRepresentation):
         else:
             return False
 
-        if self._energy//3 >= possible_mate._energy:
-            one_third = self._energy//3
-            self._change_energy(-one_third)
-            possible_mate._change_energy(one_third)
+        new_energy = (self._energy + possible_mate._energy) / 2
+        self._energy = new_energy
+        possible_mate._energy = new_energy
+        return True
 
-            return True
-
-        return False
+        # if self._energy//3 >= possible_mate._energy:
+        #     one_third = self._energy//3
+        #     self._change_energy(-one_third)
+        #     possible_mate._change_energy(one_third)
+        #
+        #     return True
+        #
+        # return False
 
     def jump_with_spin(self, x, y):
         coord_x, coord_y = self._find_direction_cell_jump(x, y)

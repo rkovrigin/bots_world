@@ -19,7 +19,7 @@ class Map(object):
         self._wrapper_y = wrapper_y
         self._map_bots = ParentMap(x, y, wrapper_x, wrapper_y)
         self._map_minerals = ParentMap(x, y, wrapper_x, wrapper_y)
-        self._sun_map = SunMap(x, y, 10, 0)
+        self._sun_map = SunMap(x, y, 30, 0)
         self._outside_map = outside_map
 
     def sun_rate(self, x, y):
