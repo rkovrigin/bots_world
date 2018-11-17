@@ -53,10 +53,11 @@ how many bots has eaten
 # TODO: Create weight of action, eat/move/stay
 
 
-class Bot(BotRepresentation):
+class Bot(object):
     __slots__ = ["_mutant", "_energy", "_size", "_commands", "_age", "_is_alive", "_move_cost", "_day_cost",
                  "_current_command", "_max_age", "_kind", "_sun_rate", "_map", "_bite_mineral",
-                 "_bitmap", "_jump_cost", "_copy_cost", "_die_from_age", "_color", "_attempts"]
+                 "_bitmap", "_jump_cost", "_copy_cost", "_die_from_age", "_color", "_attempts",
+                 "_r", "_g", "_b"]
 
     def __init__(self, map, energy=100, mutant=False, copy_commands=None):
         self._mutant = mutant
@@ -344,3 +345,6 @@ class Bot(BotRepresentation):
             if bit > 1:
                 return False
         return True
+
+    def represent_itself(self):
+        return Cell(self._color.r, self._color.g, self._color.b, self._energy, 'bot')

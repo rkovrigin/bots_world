@@ -116,4 +116,4 @@ class ParentMap(object):
                 yield member, x, y
 
     def create_representation_snapshot(self):
-        return [[member.print_style(), x, y, member.energy, member._commands] for (x, y), member in self._map_items.items()]
+        return [[member.represent_itself(), x, y] for (x, y), member in self._map_items.items()]

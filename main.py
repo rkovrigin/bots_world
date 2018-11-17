@@ -19,7 +19,7 @@ exit_flag = 0
 
 
 def main():
-    queue = Queue(maxsize=1)
+    queue = Queue(maxsize=1000)
     world = World(queue, DEFAULT_UNIV_X, DEFAULT_UNIV_Y, BOTS_AT_BEGINNING, MINERALS_AT_BEGINNING)
 
     world.start()

@@ -1,13 +1,12 @@
 from representation import *
 
 
-class Mineral(MineralRepresentation):
+class Mineral(object):
     _max_energy = 300
 
     def __init__(self, map, energy=255):
         self._energy = energy
         self._commands = []
-
         self._is_active = True
         self._map = map
 
@@ -53,3 +52,6 @@ class Mineral(MineralRepresentation):
             if not self._map.is_mineral_at(x, y+1):
                 self._map.move_mineral(x, y, x, y + 1)
                 # self._map._map_minerals.move(x, y, x, y+1)
+
+    def represent_itself(self):
+        return Cell(0xf4, 72, 0xd0, self._energy, 'mineral')

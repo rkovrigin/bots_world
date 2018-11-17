@@ -114,7 +114,7 @@ class Map(object):
 
     def create_representation_snapshot(self):
         config.BOTS = len(self._map_bots)
-        return [[member.print_style(), x, y, member.energy]
+        return [[member.represent_itself(), x, y]
                 for (x, y), member in chain(self._map_minerals._map_items.items(), self._map_bots._map_items.items())]
 
 

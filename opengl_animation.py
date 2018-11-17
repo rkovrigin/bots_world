@@ -52,8 +52,7 @@ from PyQt5.QtWidgets import QApplication, QGridLayout, QLabel, QOpenGLWidget, QW
 from PyQt5.QtWidgets import QPushButton, QCheckBox, QGroupBox, QRadioButton, QVBoxLayout
 
 import config
-from representation import PRINT_STYLE_GREENRED, PRINT_STYLE_GREENRED_ENERGY, PRINT_STYLE_NO_COLOR, \
-    PRINT_STYLE_MULTICOLOR, PRINT_STYLE_ENERGY, PRINT_STYLE_NO_DRAWING
+from representation import PRINT_STYLE_RGB, PRINT_STYLE_MAX_COLOR_VALUE, PRINT_STYLE_NO_COLOR, PRINT_STYLE_ENERGY
 
 
 class GLWidget(QOpenGLWidget):
@@ -66,7 +65,7 @@ class GLWidget(QOpenGLWidget):
         self._scale = scale
         self._queue = queue
         self._parent = parent
-        self._print_style = PRINT_STYLE_GREENRED
+        self._print_style = PRINT_STYLE_RGB
         self.setFixedSize(x*scale, y*scale)
         self.setAutoFillBackground(False)
         self.background = QBrush(QColor(255, 255, 255))
@@ -95,29 +94,43 @@ class GLWidget(QOpenGLWidget):
         painter.fillRect(event.rect(), self.background)
         painter.save()
 
-        if config.DRAWING_STYLE == PRINT_STYLE_NO_COLOR:
-            for repr, x, y, energy, commands in members:
+        if config.DRAWING_STYLE == PRINT_STYLE_RGB:
+            for repr, x, y in members:
+                painter.setBrush(QColor(repr.red, repr.green, repr.blue, 100))
                 self.drawRect(painter, x, y)
-        elif config.DRAWING_STYLE != PRINT_STYLE_NO_DRAWING:
-            for repr, x, y, energy in members:
-                # if x < 0 or x >= 200 or y < 0 or y >= 200:
-                #     print("OUT OF MAP: [%d:%d] {%d}" % (x, y, energy))
-                #if type(repr) in (list, tuple):
-                painter.setBrush(repr.color)
-                #else:
-                #    painter.setBrush(repr.color)
-                self.drawRect(painter, x, y)
-
                 if x == self._click_x and y == self._click_y:
-                    self._parent.openGLLabel_commands.setText("Coordinates [%d:%d]; Energy {%d}" % (x, y, energy))
+                    self._parent.openGLLabel_commands.setText("Coordinates [%d:%d:%d]; Energy {%d}" % (repr.red, repr.green, repr.blue, repr.energy))
+        elif config.DRAWING_STYLE == PRINT_STYLE_MAX_COLOR_VALUE:
+            for repr, x, y in members:
+                if repr.kind == 'bot':
+                    max_color = max(repr.red, repr.green, repr.blue)
+                    if max_color == repr.red:
+                        painter.setBrush(Qt.red)
+                    elif max_color == repr.green:
+                        painter.setBrush(Qt.green)
+                    elif max_color == repr.blue:
+                        painter.setBrush(Qt.blue)
+                elif repr.kind == 'mineral':
+                    painter.setBrush(QColor(repr.red, repr.green, repr.blue))
+                self.drawRect(painter, x, y)
+        elif config.DRAWING_STYLE == PRINT_STYLE_NO_COLOR:
+            for _, x, y in members:
+                self.drawRect(painter, x, y)
+        elif config.DRAWING_STYLE == PRINT_STYLE_ENERGY:
+            for repr, x, y in members:
+                painter.setBrush(QColor(255, 255-repr.energy, 0, repr.energy))
+                self.drawRect(painter, x, y)
 
-                # if x == self._click_x and y == self._click_y and len(commands) > 0:
-                #     print_pattern = (("%d " * 8) + "\n")*8
-                #     text = print_pattern % tuple(commands)
-                #     text += "Energy %d" % energy
-                #     self._parent.openGLLabel_commands.setText("%d %d" % (x, y))
-                #     self._click_x = None
-                #     self._click_y = None
+        # if config.DRAWING_STYLE == PRINT_STYLE_NO_COLOR:
+        #     for repr, x, y, energy, commands in members:
+        #         self.drawRect(painter, x, y)
+        # elif config.DRAWING_STYLE != PRINT_STYLE_NO_DRAWING:
+        #     for repr, x, y in members:
+        #         painter.setBrush(repr.color)
+        #         self.drawRect(painter, x, y)
+        #
+        # if x == self._click_x and y == self._click_y:
+        #     self._parent.openGLLabel_commands.setText("Coordinates [%d:%d]; Energy {%d}" % (x, y, energy))
 
         painter.restore()
 
@@ -157,46 +170,34 @@ class WorldWindow(QWidget):
     def create_radio_button_group(self):
         groupBox = QGroupBox("View style")
 
-        self.radioGreenRed = QRadioButton("Green/Red/Blue")
-        self.radioGreenRed.toggled.connect(self.radio_button_color_is_checked)
+        self.radioRGB = QRadioButton("RGB")
+        self.radioRGB.toggled.connect(self.radio_button_color_is_checked)
 
-        self.radioGreenRedEnergy = QRadioButton("Green/Red/Blue energy")
-        self.radioGreenRedEnergy.toggled.connect(self.radio_button_color_is_checked)
+        self.radioMaxColorValue = QRadioButton("Max color")
+        self.radioMaxColorValue.toggled.connect(self.radio_button_color_is_checked)
 
         self.radioNoColor = QRadioButton("No color")
         self.radioNoColor.toggled.connect(self.radio_button_color_is_checked)
 
-        self.radioMultiColor = QRadioButton("Multicolor")
-        self.radioMultiColor.toggled.connect(self.radio_button_color_is_checked)
-
         self.radioEnergy = QRadioButton("Energy")
         self.radioEnergy.toggled.connect(self.radio_button_color_is_checked)
 
-        self.noDrawing = QRadioButton("No drawing")
-        self.noDrawing.toggled.connect(self.radio_button_color_is_checked)
-
-        if config.DRAWING_STYLE == PRINT_STYLE_GREENRED:
-            self.radioGreenRed.setChecked(True)
-        elif config.DRAWING_STYLE == PRINT_STYLE_GREENRED_ENERGY:
-            self.radioGreenRedEnergy.setChecked(True)
+        if config.DRAWING_STYLE == PRINT_STYLE_RGB:
+            self.radioRGB.setChecked(True)
+        elif config.DRAWING_STYLE == PRINT_STYLE_MAX_COLOR_VALUE:
+            self.radioMaxColorValue.setChecked(True)
         elif config.DRAWING_STYLE == PRINT_STYLE_NO_COLOR:
             self.radioNoColor.setChecked(True)
-        elif config.DRAWING_STYLE == PRINT_STYLE_MULTICOLOR:
-            self.radioMultiColor.setChecked(True)
         elif config.DRAWING_STYLE == PRINT_STYLE_ENERGY:
             self.radioEnergy.setChecked(True)
-        elif config.DRAWING_STYLE == PRINT_STYLE_NO_DRAWING:
-            self.noDrawing.setChecked(True)
         else:
             raise Exception("config.DRAWING_STYLE is set incorrectly")
 
         vbox = QVBoxLayout()
-        vbox.addWidget(self.radioGreenRed)
-        vbox.addWidget(self.radioGreenRedEnergy)
-        vbox.addWidget(self.radioMultiColor)
+        vbox.addWidget(self.radioRGB)
+        vbox.addWidget(self.radioMaxColorValue)
         vbox.addWidget(self.radioEnergy)
         vbox.addWidget(self.radioNoColor)
-        vbox.addWidget(self.noDrawing)
         groupBox.setLayout(vbox)
 
         return groupBox
@@ -205,18 +206,14 @@ class WorldWindow(QWidget):
         if not checked:
             return
 
-        if self.radioGreenRed.isChecked():
-            config.DRAWING_STYLE = PRINT_STYLE_GREENRED
-        elif self.radioGreenRedEnergy.isChecked():
-            config.DRAWING_STYLE = PRINT_STYLE_GREENRED_ENERGY
+        if self.radioRGB.isChecked():
+            config.DRAWING_STYLE = PRINT_STYLE_RGB
+        elif self.radioMaxColorValue.isChecked():
+            config.DRAWING_STYLE = PRINT_STYLE_MAX_COLOR_VALUE
         elif self.radioNoColor.isChecked():
             config.DRAWING_STYLE = PRINT_STYLE_NO_COLOR
-        elif self.radioMultiColor.isChecked():
-            config.DRAWING_STYLE = PRINT_STYLE_MULTICOLOR
         elif self.radioEnergy.isChecked():
             config.DRAWING_STYLE = PRINT_STYLE_ENERGY
-        elif self.noDrawing.isChecked():
-            config.DRAWING_STYLE = PRINT_STYLE_NO_DRAWING
         else:
             raise Exception("No radio button is chosen")
 
