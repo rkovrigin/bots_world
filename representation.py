@@ -13,17 +13,17 @@ class Representation(object):
 
     def increaseRed(self, amount=10):
         self._color.setRed(min(self.color.red() + amount, 255))
-        self._color.setGreen(max(self.color.green() - amount, 0))
-        self._color.setBlue(max(self.color.blue() - amount, 0))
+        self._color.setGreen(max(self.color.green() - self._decrease, 0))
+        self._color.setBlue(max(self.color.blue() - self._decrease, 0))
 
     def increaseGreen(self, amount=10):
-        self._color.setRed(max(self.color.red() - amount, 0))
+        self._color.setRed(max(self.color.red() - self._decrease, 0))
         self._color.setGreen(min(self.color.green() + amount, 255))
-        self._color.setBlue(max(self.color.blue() - amount, 0))
+        self._color.setBlue(max(self.color.blue() - self._decrease, 0))
 
     def increaseBlue(self, amount=10):
-        self._color.setRed(max(self.color.red() - amount, 0))
-        self._color.setGreen(max(self.color.green() - amount, 0))
+        self._color.setRed(max(self.color.red() - self._decrease, 0))
+        self._color.setGreen(max(self.color.green() - self._decrease, 0))
         self._color.setBlue(min(self.color.blue() + amount, 255))
 
     def setAlpha(self, alpha):

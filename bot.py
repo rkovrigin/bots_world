@@ -1,4 +1,3 @@
-from collections import namedtuple
 from random import randrange, randint, choice
 from mineral import Mineral
 from representation import *
@@ -84,6 +83,7 @@ class Bot(BotRepresentation):
         if copy_commands is None:
             for i in range(self._size):
                 self._commands[i] = choice((GET_ENERGY_FROM_SUN, CREATE_COPY, EAT_ANOTHER_BOT, EAT_MINERAL, MOVE, JUMP, randrange(0, self._size)))
+                self._commands[i] = randrange(0, self._size)
         else:
             self._commands = copy_commands[:]
 
@@ -162,17 +162,8 @@ class Bot(BotRepresentation):
             self.die("Can't create copy")
             return False
 
-        # for coord_x, coord_y in get_cells_around_list:
-        #     # coord_x, coord_y = self._find_direction_cell(x, y, pointer_step=i)
-        #     if self._map.is_bot_at(x + coord_x, y + coord_y) is None:
-        #         break
-        # else:
-        #     self.die("Can't create copy")
-        #     return False
-
         self._change_energy(-self._copy_cost)
         child = Bot(self._map, energy=50, mutant=mutate, copy_commands=self._commands)
-        # self._map.add_member_in_pos(child, coord_x + x, coord_y + y)
         self._map.add_member_in_pos(child, _x, _y)
 
         if mutate:
@@ -191,8 +182,6 @@ class Bot(BotRepresentation):
             child._jump_cost = self._jump_cost
             child._day_cost = self._day_cost
             child._copy_cost = self._copy_cost
-
-        # child._color = self._color
 
         return True
 
@@ -248,13 +237,6 @@ class Bot(BotRepresentation):
         else:
             return False
 
-        # for _x, _y in get_cells_around_list_plus_self:
-        #     potential_mineral = self._map.is_mineral_at(x + _x, y + _y)
-        #     if isinstance(potential_mineral, Mineral):
-        #         break
-        # else:
-        #     return False
-
         bite = potential_mineral.bite_piece(self._bite_mineral)
         if bite > 0:
             self._change_energy(bite)
@@ -275,16 +257,6 @@ class Bot(BotRepresentation):
                 break
         else:
             return False
-
-        # for _x, _y in get_cells_around_list:
-        #     possible_victim = self._map.is_bot_at(x + _x, y + _y)
-        #     if isinstance(possible_victim, Bot) and not self.is_same_kind(possible_victim):
-        #         break
-        # else:
-        #     return False
-
-        # if possible_victim.energy/2 > self.energy:
-        #     return False
 
         self._change_energy(possible_victim._energy)
         self._color.increaseRed()
@@ -338,12 +310,8 @@ class Bot(BotRepresentation):
             self.die_of_choking(x, y)
         else:
             next_command = self._next_command_pointer(1)
-            if self._commands[next_command] in legal_commands:
-                self._current_command = next_command
-            else:
-                self._current_command = self._commands[next_command]
+            self._current_command = self._commands[next_command]
             self._change_energy(-self._day_cost)
-
 
     def share_energy_with_same_kind(self, x, y):
         for i in range(self._attempts):
@@ -359,15 +327,6 @@ class Bot(BotRepresentation):
         possible_mate._energy = new_energy
         return True
 
-        # if self._energy//3 >= possible_mate._energy:
-        #     one_third = self._energy//3
-        #     self._change_energy(-one_third)
-        #     possible_mate._change_energy(one_third)
-        #
-        #     return True
-        #
-        # return False
-
     def jump_with_spin(self, x, y):
         coord_x, coord_y = self._find_direction_cell_jump(x, y)
 
@@ -376,12 +335,6 @@ class Bot(BotRepresentation):
 
         self._map.move_bot(x, y, coord_x, coord_y)
         self._change_energy(-self._jump_cost)
-        return True
-
-    def is_same_kind_2(self, member):
-        for i in range(self._size):
-            if self._commands[i] != member._commands[i]:
-                return False
         return True
 
     def is_same_kind(self, member):
