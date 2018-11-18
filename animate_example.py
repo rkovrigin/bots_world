@@ -1,3 +1,5 @@
+from threading import Thread
+
 from PyQt5.QtWidgets import *
 from PyQt5.QtCore import *
 from PyQt5.QtGui import *
@@ -7,30 +9,28 @@ import sys
 from bot import Bot
 from world import World
 
-DEFAULT_UNIV_X = 100
-DEFAULT_UNIV_Y = 100
-BOTS_AT_BEGINNING = 10
-SCALE = 5
-
 
 class UniverseView(QGraphicsView):
-    def __init__(self):
+    def __init__(self, x, y, scale):
         QGraphicsView.__init__(self)
+        self._x = x
+        self._y = y
+        self._scale = scale
         self.scene = QGraphicsScene()
         self.setScene(self.scene)
-        self.drawUniverse(DEFAULT_UNIV_X, DEFAULT_UNIV_Y)
+        self.drawUniverse(x, y)
 
     def drawUniverse(self, rows, columns):
-        self.scene.setSceneRect(QRectF(0, 0, rows*SCALE, columns*SCALE))
+        self.scene.setSceneRect(QRectF(0, 0, rows*self._scale, columns*self._scale))
 
         for x in range(rows):
-            self.scene.addLine(x*SCALE, 0, x*SCALE, columns*SCALE, QPen(Qt.black))
+            self.scene.addLine(x*self._scale, 0, x*self._scale, columns*self._scale, QPen(Qt.black))
 
         for y in range(columns):
-            self.scene.addLine(0, y*SCALE, rows*SCALE, y*SCALE, QPen(Qt.black))
+            self.scene.addLine(0, y*self._scale, rows*self._scale, y*self._scale, QPen(Qt.black))
 
     def drawCellAt(self, x, y, color=Qt.black):
-        item = QGraphicsRectItem(x*SCALE, y*SCALE, SCALE, SCALE)
+        item = QGraphicsRectItem(x*self._scale, y*self._scale, self._scale, self._scale)
         item.setBrush(QBrush(color))
         self.scene.addItem(item)
 
@@ -52,7 +52,7 @@ class UniverseView(QGraphicsView):
         self.drawCellAt(x, y, color)
 
     def drawEnergyGrayCellAt(self, x, y, energy):
-        item = QGraphicsRectItem(x*SCALE, y*SCALE, SCALE, SCALE)
+        item = QGraphicsRectItem(x*self._scale, y*self._scale, self._scale, self._scale)
         x = max(0, 255-energy)
         item.setBrush(QColor(x, x, x))
         self.scene.addItem(item)
@@ -61,8 +61,8 @@ class UniverseView(QGraphicsView):
         self.scene.clear()
 
     def random_scene(self):
-        for i in range(DEFAULT_UNIV_X):
-            for j in range(DEFAULT_UNIV_Y):
+        for i in range(self._x):
+            for j in range(self._y):
                 if not random.randrange(100) % 2:
                     self.drawCellAt(i, j)
 
@@ -88,6 +88,15 @@ class UniverseView(QGraphicsView):
 
         #self.drawUniverse(DEFAULT_UNIV_X, DEFAULT_UNIV_Y)
 
+    def set_scene_bots_short(self, bots_list):
+        for bot in bots_list:
+            if bot.predator:
+                self.drawCellAt(bot.x, bot.y, Qt.red)
+            elif bot.age < 50:
+                self.drawCellAt(bot.x, bot.y, Qt.green)
+            else:
+                self.drawCellAt(bot.x, bot.y, Qt.darkGreen)
+
     def set_scene_energy(self, map):
         for bot, x, y in map.iterate_members():
             self.drawEnergyCellAt(x, y, bot.energy)
@@ -95,11 +104,15 @@ class UniverseView(QGraphicsView):
 
 
 class Qwidget(QWidget):
-    def __init__(self):
+    def __init__(self, queue, x, y, scale):
         super(Qwidget, self).__init__()
+        self._x = x
+        self._y = y
+        self._scale = scale
         # self.size = size
         self.game = None
-        self.world = World(DEFAULT_UNIV_X, DEFAULT_UNIV_Y, BOTS_AT_BEGINNING)
+        self.queue = queue
+        # self.world = World(DEFAULT_UNIV_X, DEFAULT_UNIV_Y, BOTS_AT_BEGINNING)
         self.label = QLabel()
         self.initUI()
         self.show()
@@ -111,8 +124,9 @@ class Qwidget(QWidget):
         self.comboBox = QComboBox()
         self.comboBox.currentTextChanged.connect(self.select)
 
-        self.view = UniverseView()
+        self.view = UniverseView(self._x, self._x, self._scale)
         self.layout().addWidget(self.view)
+
 
         self.item = None
         self.timer = QTimer()
@@ -128,16 +142,25 @@ class Qwidget(QWidget):
 
     def tick(self):
         self.view.clear_scene()
-        test = self.world.cycle()
+        # test = self.world.cycle()
         #self.view.set_scene(self.world._map)
-        self.view.set_scene_bots(self.world._map)
+        # if not self.queue.empty():
+        map = self.queue.get()
+        self.view.set_scene_bots_short(map)
+        # self.label.setText("Bots: %d" % (map.get_bots_amount()))
+        predators = 0
+        vegans = 0
+        for bot in map:
+            if bot.predator:
+                predators += 1
+            else:
+                vegans += 1
+        self.label.setText("Bots: %d; Queue: %d; Vegans: %d, Predators %d"
+                           %(len(map), self.queue.qsize(), vegans, predators)) #qsize locks the process for (0.5-1.5)% of time
+        # self.label.setText("Bots: %d" %(len(map)))
+        del map
+        # else:
+        #     print("Queue is empty")
         # self.view.set_scene_rainbow(self.world._map)
         # self.view.set_scene_energy(self.world._map)
-        self.label.setText(test)
-
-app = QApplication(sys.argv)
-# gol = GameOfLifeApp()
-# gol.show()
-
-w = Qwidget()
-app.exec_()
+        # self.label.setText(test)
