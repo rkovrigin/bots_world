@@ -96,7 +96,7 @@ class Bot(object):
     def _mutate(self):
         rand_nmb = randint(0, self.size - 1)
         cmd = self._commands[rand_nmb]
-        new_cmd_nmb = self._invert_bit(cmd, randint(0, 5))
+        new_cmd_nmb = self._invert_bit(cmd)
         self._commands[rand_nmb] = new_cmd_nmb
 
     def _set_kind(self):
@@ -137,7 +137,8 @@ class Bot(object):
         return self._energy
 
     @staticmethod
-    def _invert_bit(nmb, bit_to_change):
+    def _invert_bit(nmb):
+        bit_to_change = randint(0, 5)
         nmb ^= 1 << bit_to_change
         return nmb
 
