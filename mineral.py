@@ -46,12 +46,12 @@ class Mineral(object):
         if self.energy <= 0:
             self.die()
         # self.energy += 1
-        if not self._map._wrapper_y:
-            # self._map.move_mineral(x, y, x, y + 1)
-            # pass
-            if not self._map.is_mineral_at(x, y+1):
-                self._map.move_mineral(x, y, x, y + 1)
+        # if not self._map._wrapper_y:
+        #     # self._map.move_mineral(x, y, x, y + 1)
+        #     # pass
+        #     if not self._map.is_mineral_at(x, y+1):
+        #         self._map.move_mineral(x, y, x, y + 1)
                 # self._map._map_minerals.move(x, y, x, y+1)
 
-    def represent_itself(self):
-        return Cell(0xf4, 72, 0xd0, self._energy, 'mineral')
+    def represent_itself(self, x, y):
+        return [0xf4, 72, 0xd0, self._energy, 'mineral', x, y]

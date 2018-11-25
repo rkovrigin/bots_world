@@ -44,8 +44,7 @@ class World(Thread):
         self._run.set()
 
     def run(self):
-        start_time = time()
-
+        i = 0
         while not self._run.is_set():
             if self._map.get_bots_amount() == 0:
                 self._set_bots_randomly(self._init_bot_amount)
@@ -55,7 +54,13 @@ class World(Thread):
             # sun_rate = sun_rates[self._date//DAYS_IN_MONTH]
             # self._map.sun_rate = sun_rate
 
+            before = time()
             self._map.cycle()
+            after = time()
+
+            i += 1
+            if i % 30 == 0:
+                print("Calc in %f" % (after-before))
 
             if self._date > 360:
                 self._date = 0

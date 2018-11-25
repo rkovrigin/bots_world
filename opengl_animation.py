@@ -94,30 +94,30 @@ class GLWidget(QOpenGLWidget):
         painter.save()
 
         if config.DRAWING_STYLE == PRINT_STYLE_RGB:
-            for repr, x, y in members:
-                painter.setBrush(QColor(repr.red, repr.green, repr.blue, 100))
+            for red, green, blue, energy, kind, x, y in members:
+                painter.setBrush(QColor(red, green, blue, 100))
                 self.drawRect(painter, x, y)
                 if x == self._click_x and y == self._click_y:
-                    self._parent.openGLLabel_commands.setText("Coordinates [%d:%d:%d]; Energy {%d}" % (repr.red, repr.green, repr.blue, repr.energy))
+                    self._parent.openGLLabel_commands.setText("Coordinates [%d:%d:%d]; Energy {%d}" % (red, green, blue, energy))
         elif config.DRAWING_STYLE == PRINT_STYLE_MAX_COLOR_VALUE:
-            for repr, x, y in members:
-                if repr.kind == 'bot':
-                    max_color = max(repr.red, repr.green, repr.blue)
-                    if max_color == repr.red:
+            for red, green, blue, energy, kind, x, y in members:
+                if kind == 'bot':
+                    max_color = max(red, green, blue)
+                    if max_color == red:
                         painter.setBrush(Qt.red)
-                    elif max_color == repr.green:
+                    elif max_color == green:
                         painter.setBrush(Qt.green)
-                    elif max_color == repr.blue:
+                    elif max_color == blue:
                         painter.setBrush(Qt.blue)
-                elif repr.kind == 'mineral':
-                    painter.setBrush(QColor(repr.red, repr.green, repr.blue))
+                elif kind == 'mineral':
+                    painter.setBrush(QColor(red, green, blue))
                 self.drawRect(painter, x, y)
         elif config.DRAWING_STYLE == PRINT_STYLE_NO_COLOR:
-            for _, x, y in members:
+            for red, green, blue, energy, kind, x, y in members:
                 self.drawRect(painter, x, y)
         elif config.DRAWING_STYLE == PRINT_STYLE_ENERGY:
-            for repr, x, y in members:
-                painter.setBrush(QColor(255, 255-repr.energy, 0, repr.energy))
+            for red, green, blue, energy, kind, x, y in members:
+                painter.setBrush(QColor(255, 255-energy, 0, energy))
                 self.drawRect(painter, x, y)
 
         # if config.DRAWING_STYLE == PRINT_STYLE_NO_COLOR:
@@ -164,7 +164,7 @@ class WorldWindow(QWidget):
 
         timer = QTimer(self)
         timer.timeout.connect(self.openGL.animate)
-        timer.start(1)
+        timer.start(30)
 
     def create_radio_button_group(self):
         groupBox = QGroupBox("View style")
