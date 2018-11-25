@@ -1,19 +1,12 @@
-from copy import copy, deepcopy
 from random import randrange
 from threading import Thread, Event
-from time import sleep, time
-
+from time import time
 from map import Map
 from bot import Bot
 from mineral import Mineral
 from collections import namedtuple
 import config
-
-SUN_RATE = 10
-DAYS_IN_MONTH = 30
-MONTHS = 12
-
-sun_rates = [8, 8, 10, 12, 14, 16, 18, 14, 12, 8, 10, 6, 4]
+from consts import RUN
 
 Data = namedtuple("Data", ["cycle", "day", "population", "sun_rate"])
 
@@ -52,20 +45,18 @@ class World(Thread):
             if self._map.get_minerals_amount() < self._init_mineral_amount//2:
                 self._set_minerals_randomly(self._init_mineral_amount//2)
 
-            # sun_rate = sun_rates[self._date//DAYS_IN_MONTH]
-            # self._map.sun_rate = sun_rate
+            if config.RUN == RUN:
+                self._map.cycle()
 
-            self._map.cycle()
+                if self._date > 360:
+                    self._date = 0
+                else:
+                    self._date += 1
 
-            if self._date > 360:
-                self._date = 0
-            else:
-                self._date += 1
+                self._cycle += 1
 
-            self._cycle += 1
+                # passed_time = self._cycle / (time() - start_time)
+                # print(self._cycle, passed_time)
 
-            # passed_time = self._cycle / (time() - start_time)
-            # print(self._cycle, passed_time)
-
-            self.queue.put(self._map.create_representation_snapshot())
-            config.DAY += 1
+                self.queue.put(self._map.create_representation_snapshot())
+                config.DAY += 1
