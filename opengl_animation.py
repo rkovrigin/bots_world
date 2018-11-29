@@ -10,6 +10,7 @@ from PyQt5.QtWidgets import QPushButton, QCheckBox, QGroupBox, QRadioButton, QVB
 import config
 from representation import PRINT_STYLE_RGB, PRINT_STYLE_MAX_COLOR_VALUE, PRINT_STYLE_NO_COLOR, PRINT_STYLE_ENERGY
 from consts import RUN, PAUSE
+import time
 
 
 class GLWidget(QOpenGLWidget):
@@ -43,6 +44,8 @@ class GLWidget(QOpenGLWidget):
             self._parent.openGLLabel.setText("Calculated frames: %d; Day: %d" % (self._queue.qsize(), config.DAY))
             self.paint(painter, event, self._members)
             painter.end()
+        else:
+            time.sleep(1)
 
     def drawRect(self, painter, x, y):
         painter.drawRect(x*self._scale, y*self._scale, self._scale, self._scale)

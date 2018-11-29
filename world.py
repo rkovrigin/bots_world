@@ -1,6 +1,6 @@
 from random import randrange
 from threading import Thread, Event
-from time import time
+from time import time, sleep
 from map import Map
 from bot import Bot
 from mineral import Mineral
@@ -40,12 +40,12 @@ class World(Thread):
         start_time = time()
 
         while not self._run.is_set():
-            if self._map.get_bots_amount() == 0:
-                self._set_bots_randomly(self._init_bot_amount)
-            if self._map.get_minerals_amount() < self._init_mineral_amount//2:
-                self._set_minerals_randomly(self._init_mineral_amount//2)
-
             if config.RUN == RUN:
+                if self._map.get_bots_amount() == 0:
+                    self._set_bots_randomly(self._init_bot_amount)
+                if self._map.get_minerals_amount() < self._init_mineral_amount//2:
+                    self._set_minerals_randomly(self._init_mineral_amount//2)
+
                 self._map.cycle()
 
                 if self._date > 360:
@@ -60,3 +60,5 @@ class World(Thread):
 
                 self.queue.put(self._map.create_representation_snapshot())
                 config.DAY += 1
+            else:
+                sleep(1)
