@@ -77,7 +77,7 @@ class Bot(object):
         self._bite_mineral = randrange(20, 40)
         self._sun_rate = randrange(1, 40)
         self._copy_cost = 150
-        self._die_from_age = False
+        self._die_from_age = True
         self._color = Representation(0, 0, 0)
         self._attempts = 5
 
