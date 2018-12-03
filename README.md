@@ -8,3 +8,6 @@ Dependencies:
 
 RUN:
 python main.py
+
+The most edvanced is a "pause_button" brunch.
+On brunch "pause_button" there is some screenshots. 
