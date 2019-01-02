@@ -1,9 +1,12 @@
 import sys
+import os
 import math
 import random
+import datetime
+import time
 
-from PyQt5.QtCore import QPointF, QRect, QRectF, Qt, QTimer
-from PyQt5.QtGui import QBrush, QColor, QFont, QLinearGradient, QPainter, QPen, QSurfaceFormat
+from PyQt5.QtCore import QPointF, QRect, QRectF, Qt, QTimer, QSize
+from PyQt5.QtGui import QBrush, QColor, QFont, QLinearGradient, QPainter, QPen, QSurfaceFormat, QImage
 from PyQt5.QtWidgets import QApplication, QGridLayout, QLabel, QOpenGLWidget, QWidget
 from PyQt5.QtWidgets import QPushButton, QCheckBox, QGroupBox, QRadioButton, QVBoxLayout
 
@@ -28,30 +31,56 @@ class GLWidget(QOpenGLWidget):
         self._members = None
         self._click_x = None
         self._click_y = None
+        self.painter = QPainter()
+        self.painterImg = QPainter()
+        self.img = QImage(900, 450, QImage.Format_ARGB32)
+        self.count = 0
 
     def animate(self):
         self.elapsed = (self.elapsed + self.sender().interval()) % 1000
         self.update()
 
+    def saveImage(self):
+        name = os.path.join("C:\\", "Users", "roman.kovrigin", "sandbox", "bots", "bots_world", "out", str(time.time()) + ".png")
+        try:
+            ret = self.img.save(name, "PNG")
+            # print("Save with %s %d" % (name, ret))
+        except Exception as e:
+            print(e)
+
     def paintEvent(self, event):
-        painter = QPainter()
-        painter.begin(self)
-        painter.setRenderHint(QPainter.Antialiasing)
         self._members = self._queue.get()
-        self._parent.openGLLabel.setText("Calculated frames: %d; Day: %d" % (self._queue.qsize(), config.DAY))
-        self.paint(painter, event, self._members)
-        painter.end()
+
+        if self.count % 10 == 0:
+            self.painter.begin(self)
+            self._parent.openGLLabel.setText("Calculated frames: %d; Day: %d" % (self._queue.qsize(), config.DAY))
+            self.paint(self.painter, event, self._members)
+            self.painter.end()
+
+
+        self.painterImg.begin(self.img)
+        self.paint(self.painterImg, event, self._members)
+        self.painterImg.end()
+        self.saveImage()
+
+        self.count += 1
+
+        # if self._queue.empty():
+        #     exit(0)
+        # self.paintGL(self.painterImg, event, self._members)
+        # self.painter.save()
+        # self.painter.restore()
+        # print(img.save("C:\\Users\\roman.kovrigin\\sandbox\\bots\\bots_world\\out\\1", "PNG"))
 
     def drawRect(self, painter, x, y):
         painter.drawRect(x*self._scale, y*self._scale, self._scale, self._scale)
 
     def paint(self, painter, event, members):
         painter.fillRect(event.rect(), self.background)
-        painter.save()
 
         if config.DRAWING_STYLE == PRINT_STYLE_RGB:
             for repr, x, y in members:
-                painter.setBrush(QColor(repr.red, repr.green, repr.blue, 100))
+                painter.setBrush(QColor(repr.red, repr.green, repr.blue, min(repr.red + repr.green + repr.blue, 255)))
                 self.drawRect(painter, x, y)
                 if x == self._click_x and y == self._click_y:
                     self._parent.openGLLabel_commands.setText("Coordinates [%d:%d:%d]; Energy {%d}" % (repr.red, repr.green, repr.blue, repr.energy))
@@ -75,19 +104,6 @@ class GLWidget(QOpenGLWidget):
             for repr, x, y in members:
                 painter.setBrush(QColor(255, 255-repr.energy, 0, repr.energy))
                 self.drawRect(painter, x, y)
-
-        # if config.DRAWING_STYLE == PRINT_STYLE_NO_COLOR:
-        #     for repr, x, y, energy, commands in members:
-        #         self.drawRect(painter, x, y)
-        # elif config.DRAWING_STYLE != PRINT_STYLE_NO_DRAWING:
-        #     for repr, x, y in members:
-        #         painter.setBrush(repr.color)
-        #         self.drawRect(painter, x, y)
-        #
-        # if x == self._click_x and y == self._click_y:
-        #     self._parent.openGLLabel_commands.setText("Coordinates [%d:%d]; Energy {%d}" % (x, y, energy))
-
-        painter.restore()
 
     def mousePressEvent(self, event):
         self._click_x = int(event.localPos().x() // self._scale)
@@ -120,7 +136,7 @@ class WorldWindow(QWidget):
 
         timer = QTimer(self)
         timer.timeout.connect(self.openGL.animate)
-        timer.start(1)
+        timer.start(30)
 
     def create_radio_button_group(self):
         groupBox = QGroupBox("View style")

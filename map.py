@@ -4,13 +4,14 @@ from random import randint, randrange
 
 import config
 from mineral import Mineral
-from parent_map import ParentMap, outside_map, my_mod
+from parent_map import ParentMap, my_mod
 from sun_map import SunMap
 
 from bot import Bot
 
+
 class Map(object):
-    __slots__ = ["_x", "_y", "_map_bots", "_map_minerals", "_sun_rate", "_wrapper_x", "_wrapper_y", "_outside_map", "_sun_map"]
+    __slots__ = ["_x", "_y", "_map_bots", "_map_minerals", "_sun_rate", "_wrapper_x", "_wrapper_y", "_sun_map", "devision"]
 
     def __init__(self, x, y, wrapper_x=True, wrapper_y=True):
         self._x = x
@@ -19,11 +20,11 @@ class Map(object):
         self._wrapper_y = wrapper_y
         self._map_bots = ParentMap(x, y, wrapper_x, wrapper_y)
         self._map_minerals = ParentMap(x, y, wrapper_x, wrapper_y)
-        self._sun_map = SunMap(x, y, 30, 0)
-        self._outside_map = outside_map
+        self._sun_map = SunMap(x, y, 20, 0)
+        self.devision = 1
 
     def sun_rate(self, x, y):
-        return self._sun_map.sun_rate_at(x, y)
+        return self._sun_map.sun_rate_at(x, y)//self.devision
 
     # # TODO: create a map for sun
     # @sun_rate.setter

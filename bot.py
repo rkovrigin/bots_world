@@ -66,22 +66,22 @@ class Bot(object):
         self._commands = [0] * self.size
         self._age = 0
         self._is_alive = True
-        self._move_cost = randrange(1, 5)
-        self._jump_cost = randrange(6, 12)
         self._current_command = 0
-        self._max_age = randrange(70, 300)
         self._kind = 0
         self._map = map
         self._bitmap = 0
-        self._day_cost = randrange(1, 2)
-        self._bite_mineral = randrange(20, 40)
-        self._sun_rate = randrange(1, 40)
         self._copy_cost = 150
         self._die_from_age = False
         self._color = Representation(0, 0, 0)
         self._attempts = 5
 
         if copy_commands is None:
+            self._move_cost = randrange(1, 5)
+            self._jump_cost = randrange(6, 12)
+            self._max_age = randrange(70, 300)
+            self._day_cost = randrange(1, 2)
+            self._bite_mineral = randrange(20, 40)
+            self._sun_rate = randrange(1, 40)
             for i in range(self._size):
                 self._commands[i] = choice((GET_ENERGY_FROM_SUN, CREATE_COPY, EAT_ANOTHER_BOT, EAT_MINERAL, MOVE, JUMP, randrange(0, self._size)))
                 self._commands[i] = randrange(0, self._size)
@@ -169,13 +169,14 @@ class Bot(object):
         self._map.add_member_in_pos(child, _x, _y)
 
         if mutate:
-            child._move_cost = max(1, self._move_cost + randrange(-1, 2))
-            child._max_age = max(1, self._max_age + randrange(-1, 2))
-            child._sun_rate = max(1, self._sun_rate + randrange(-1, 2))
-            child._bite_mineral = max(1, self._bite_mineral + randrange(-1, 2))
-            child._jump_cost = max(1, self._jump_cost + randrange(-1, 2))
-            child._day_cost = max(1, self._day_cost + randrange(-1, 2))
-            child._copy_cost = max(50, self._copy_cost + randrange(-1, 2))
+            modifier = randrange(-1, 2)
+            child._move_cost = max(1, self._move_cost + modifier)
+            child._max_age = max(1, self._max_age + modifier)
+            child._sun_rate = max(1, self._sun_rate + modifier)
+            child._bite_mineral = max(1, self._bite_mineral + modifier)
+            child._jump_cost = max(1, self._jump_cost + modifier)
+            child._day_cost = max(1, self._day_cost + modifier)
+            child._copy_cost = max(50, self._copy_cost + modifier)
         else:
             child._move_cost = self._move_cost
             child._max_age = self._max_age
@@ -316,17 +317,24 @@ class Bot(object):
             self._change_energy(-self._day_cost)
 
     def share_energy_with_same_kind(self, x, y):
+        if self._energy < 200:
+            return
+
         for i in range(self._attempts):
             coord_x, coord_y = self._find_direction_cell(x, y, pointer_step=i+1)
             possible_mate = self._map.is_bot_at(coord_x, coord_y)
-            if isinstance(possible_mate, Bot) and self.is_same_kind(possible_mate):
+            if isinstance(possible_mate, Bot) and self.is_same_kind(possible_mate) and possible_mate._energy < 50:
                 break
         else:
             return False
 
-        new_energy = (self._energy + possible_mate._energy) / 2
-        self._energy = new_energy
-        possible_mate._energy = new_energy
+        # new_energy = (self._energy + possible_mate._energy) / 2
+        # self._energy = new_energy
+        # possible_mate._energy = new_energy
+        # return True
+
+        self._change_energy(-50)
+        possible_mate._change_energy(+50)
         return True
 
     def jump_with_spin(self, x, y):
@@ -349,3 +357,6 @@ class Bot(object):
 
     def represent_itself(self):
         return Cell(self._color.r, self._color.g, self._color.b, self._energy, 'bot')
+
+    def repr(self):
+        return self._color

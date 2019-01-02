@@ -45,6 +45,7 @@ class Mineral(object):
     def execute_command(self, x, y):
         if self.energy <= 0:
             self.die()
+        return
         # self.energy += 1
         if not self._map._wrapper_y:
             # self._map.move_mineral(x, y, x, y + 1)
