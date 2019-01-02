@@ -3,10 +3,10 @@ from random import randrange
 from threading import Thread, Event
 from time import sleep, time
 
-from map import Map
+#from map import Map
 from bot import Bot
 from mineral import Mineral
-from parent_map import ParentMap
+from parent_map import ParentMap as Map
 from collections import namedtuple
 import config
 
@@ -37,11 +37,11 @@ class World(Thread):
 
     def _set_bots_randomly(self, bot_amount):
         for _ in range(bot_amount):
-            self._map.add_member_in_rand(Bot(self._map), y=randrange(0, int(self._map._y)))
+            self._map.add_in_rand(Bot(self._map), y=randrange(0, int(self._map._y)))
 
     def _set_minerals_randomly(self, mineral_amount):
         for _ in range(mineral_amount):
-            self._map.add_member_in_rand(Mineral(self._map, energy=30000), y=randrange(self._map.y-15, self._map.y))
+            self._map.add_in_rand(Mineral(self._map, energy=30000), y=randrange(self._map.y-15, self._map.y))
             # self._map.add_member_in_rand(Mineral(self._map, energy=30000), y=randrange(0, self._map.y))
 
     def finish_him(self):
@@ -59,12 +59,12 @@ class World(Thread):
                 end_time = time()
                 print("Iteration %d %f" % (iteration_no, end_time - start_time))
                 start_time = time()
-                self._map.devision = seasons[q % len(seasons)]
+                self._map.set_sun_rate_division(seasons[q % len(seasons)])
                 q += 1
 
-            if self._map.get_bots_amount() == 0:
+            if self._map.members_amount(Bot) == 0:
                 self._set_bots_randomly(self._init_bot_amount)
-            if self._map.get_minerals_amount() < 0:  # self._init_mineral_amount//2:
+            if self._map.members_amount(Mineral) < 0:  # self._init_mineral_amount//2:
                 self._set_minerals_randomly(self._init_mineral_amount//2)
 
             # sun_rate = sun_rates[self._date//DAYS_IN_MONTH]

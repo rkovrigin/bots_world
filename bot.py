@@ -158,7 +158,7 @@ class Bot(object):
 
         for i in range(self._attempts):
             _x, _y = self._find_direction_cell(x=x, y=y, pointer_step=i+1)
-            if self._map.is_bot_at(_x, _y) is None:
+            if self._map.at(_x, _y) in (None, Mineral):
                 break
         else:
             self.die("Can't create copy")
@@ -166,7 +166,7 @@ class Bot(object):
 
         self._change_energy(-self._copy_cost)
         child = Bot(self._map, energy=50, mutant=mutate, copy_commands=self._commands)
-        self._map.add_member_in_pos(child, _x, _y)
+        self._map.add_in_pos(child, _x, _y)
 
         if mutate:
             modifier = randrange(-1, 2)
@@ -210,7 +210,7 @@ class Bot(object):
     def move_with_spin(self, x, y):
         coord_x, coord_y = self._find_direction_cell(x, y)
 
-        if self.energy >= self._move_cost and self._map.is_bot_at(coord_x, coord_y) is None:
+        if self.energy >= self._move_cost and self._map.at(coord_x, coord_y) in (None, Mineral):
             self._map.move_bot(x, y, coord_x, coord_y)
             self._change_energy(-self._move_cost)
             return True
@@ -221,7 +221,7 @@ class Bot(object):
         pass
         n = 0
         for _x, _y in get_cells_around_list:
-            if self._map.is_bot_at(x + _x, y + _y) and self._map.is_bot_at(x + _x, y + _y) is not self._map._outside_map:
+            if type(self._map.at(x + _x, y + _y)) is Bot and self._map.at(x + _x, y + _y) is not self._map._outside_map:
                 n += 1
         if n == 7:
             self.die("choking")
@@ -234,7 +234,7 @@ class Bot(object):
     def eat_mineral(self, x, y):
         for i in range(self._attempts):
             _x, _y = self._find_direction_cell(x=x, y=y, pointer_step=i+1, cells=get_cells_around_list_plus_self)
-            potential_mineral = self._map.is_mineral_at(_x, _y)
+            potential_mineral = self._map.at(_x, _y)
             if isinstance(potential_mineral, Mineral):
                 break
         else:
@@ -255,7 +255,7 @@ class Bot(object):
     def eat_another_bot(self, x, y):
         for i in range(self._attempts):
             _x, _y = self._find_direction_cell(x=x, y=y, pointer_step=i+1)
-            possible_victim = self._map.is_bot_at(_x, _y)
+            possible_victim = self._map.at(_x, _y)
             if isinstance(possible_victim, Bot) and not self.is_same_kind(possible_victim):
                 break
         else:
@@ -322,7 +322,7 @@ class Bot(object):
 
         for i in range(self._attempts):
             coord_x, coord_y = self._find_direction_cell(x, y, pointer_step=i+1)
-            possible_mate = self._map.is_bot_at(coord_x, coord_y)
+            possible_mate = self._map.at(coord_x, coord_y)
             if isinstance(possible_mate, Bot) and self.is_same_kind(possible_mate) and possible_mate._energy < 50:
                 break
         else:
@@ -340,7 +340,7 @@ class Bot(object):
     def jump_with_spin(self, x, y):
         coord_x, coord_y = self._find_direction_cell_jump(x, y)
 
-        if self._energy <= self._move_cost or self._map.is_bot_at(coord_x, coord_y) is not None:
+        if self._energy <= self._move_cost or self._map.at(coord_x, coord_y) is not None:
             return False
 
         self._map.move_bot(x, y, coord_x, coord_y)

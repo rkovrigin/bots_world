@@ -50,7 +50,7 @@ class Mineral(object):
         if not self._map._wrapper_y:
             # self._map.move_mineral(x, y, x, y + 1)
             # pass
-            if not self._map.is_mineral_at(x, y+1):
+            if self._map.at(x, y+1) is not Mineral:
                 self._map.move_mineral(x, y, x, y + 1)
                 # self._map._map_minerals.move(x, y, x, y+1)
 
