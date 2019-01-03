@@ -9,21 +9,17 @@ from world import World
 from queue import Queue
 from threading import Thread
 
-DEFAULT_UNIV_X = 100
-DEFAULT_UNIV_Y = 50
-BOTS_AT_BEGINNING = 800
-MINERALS_AT_BEGINNING = 800
+DEFAULT_UNIV_X = 200
+DEFAULT_UNIV_Y = 100
+BOTS_AT_BEGINNING = 2000
+MINERALS_AT_BEGINNING = 1800
 SCALE = 5
 
 exit_flag = 0
 
 
 def main():
-    queue = Queue(1000)
-    world = World(queue, DEFAULT_UNIV_X, DEFAULT_UNIV_Y, BOTS_AT_BEGINNING, MINERALS_AT_BEGINNING)
     # return world.run()
-
-    world.start()
 
     # app = QApplication(sys.argv)
     # widget = Qwidget(queue, DEFAULT_UNIV_X, DEFAULT_UNIV_Y, SCALE)
@@ -36,7 +32,12 @@ def main():
     fmt.setSamples(4)
     QSurfaceFormat.setDefaultFormat(fmt)
 
-    window = WorldWindow(queue, DEFAULT_UNIV_X, DEFAULT_UNIV_Y, SCALE)
+    window = WorldWindow(DEFAULT_UNIV_X, DEFAULT_UNIV_Y, SCALE)
+
+
+    world = World(window.openGL.animate, DEFAULT_UNIV_X, DEFAULT_UNIV_Y, BOTS_AT_BEGINNING, MINERALS_AT_BEGINNING)
+    world.start()
+
     window.show()
 
     app.exec_()

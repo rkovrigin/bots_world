@@ -4,6 +4,7 @@ from threading import Thread, Event
 from time import sleep, time
 
 #from map import Map
+import timing
 from bot import Bot
 from mineral import Mineral
 from parent_map import ParentMap as Map
@@ -22,7 +23,7 @@ seasons = [1, 2, 3, 4, 5, 4, 3, 2, 1]
 
 
 class World(Thread):
-    def __init__(self, queue, x, y, init_bot_amount=100, init_mineral_amount=100):
+    def __init__(self, animate_handle, x, y, init_bot_amount=100, init_mineral_amount=100):
         Thread.__init__(self)
         self._map = Map(x, y, wrapper_x=True, wrapper_y=False)
         self._date = 0
@@ -31,7 +32,8 @@ class World(Thread):
         self._init_mineral_amount = init_mineral_amount
         self._set_bots_randomly(init_bot_amount)
         self._set_minerals_randomly(init_mineral_amount)
-        self.queue = queue
+        self.animate_handle = animate_handle
+        self.representation_no = 1
 
         self._run = Event()
 
@@ -57,7 +59,7 @@ class World(Thread):
 
             if iteration_no % 100 == 0:
                 end_time = time()
-                print("Iteration %d %f" % (iteration_no, end_time - start_time))
+                print("Iteration %d %f (bots: %d)" % (iteration_no, end_time - start_time, self._map.members_amount()))
                 start_time = time()
                 self._map.set_sun_rate_division(seasons[q % len(seasons)])
                 q += 1
@@ -82,5 +84,7 @@ class World(Thread):
             # passed_time = self._cycle / (time() - start_time)
             # print(self._cycle, passed_time)
 
-            self.queue.put(self._map.create_representation_snapshot())
+            self.animate_handle(self._map.create_representation_snapshot(self.representation_no))
+            # self.animate_handle(None)
+
             config.DAY += 1

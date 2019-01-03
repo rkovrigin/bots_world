@@ -48,5 +48,6 @@ PRINT_STYLE_RGB = 0
 PRINT_STYLE_MAX_COLOR_VALUE = 1
 PRINT_STYLE_ENERGY = 2
 PRINT_STYLE_NO_COLOR = 3
+PRINT_NO_DRAW = 4
 
 Cell = namedtuple('Cell', ["red", "green", "blue", "energy", "kind"])

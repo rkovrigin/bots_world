@@ -1,5 +1,6 @@
 from random import randrange
 
+from timing import timing
 from sun_map import SunMap
 
 
@@ -17,6 +18,30 @@ def my_mod(a, n):
     return a
 
 
+class Container(set):
+    def at(self, member):
+        for elem in self:
+            if isinstance(elem, member):
+                return elem
+        else:
+            return None
+
+    def execute_command(self, x, y):
+        for elem in list(self):
+            elem.execute_command(x, y)
+
+    @property
+    def is_alive(self):
+        for elem in list(self):
+            if not elem.is_alive:
+                self.remove(elem)
+        return len(self) > 0
+
+    def represent_itself(self, representation_no):
+        for elem in self:
+            return elem.represent_itself(representation_no)
+
+
 class ParentMap(object):
     __slots__ = ["_x", "_y", "_map_items", "_sun_map", "_sun_rate_division", "_wrapper_x", "_wrapper_y", "_outside_map"]
 
@@ -31,7 +56,7 @@ class ParentMap(object):
         self._sun_rate_division = 1
 
     def sun_rate(self, x, y):
-        return self._sun_map.sun_rate_at(x, y) // self._sun_rate_division
+        return self._sun_map.sun_rate_at(x, y) #// self._sun_rate_division
 
     def set_sun_rate_division(self, division):
         self._sun_rate_division = division
@@ -47,7 +72,7 @@ class ParentMap(object):
     def is_empty(self, x, y):
         return self.at(x, y) is None
 
-    def add_in_pos(self, member, x, y):
+    def add_in_pos(self, candidate, x, y):
         if self._wrapper_x:
             x = my_mod(x, self.x)
 
@@ -55,12 +80,14 @@ class ParentMap(object):
             y = my_mod(y, self.y)
 
         if (x, y) in self._map_items:
-            if isinstance(self._map_items[(x, y)], set):
-                self._map_items[(x, y)].add(member)
+            if isinstance(self._map_items[(x, y)], Container):
+                self._map_items[(x, y)].add(candidate)
             else:
-                self._map_items[(x, y)] = {self._map_items[(x, y)], member}
+                tmp = Container([self._map_items[(x, y)], candidate])
+                assert len(tmp) > 1, "adding same kind on one map field" # can fail on beginning
+                self._map_items[(x, y)] = tmp
         else:
-            self._map_items[(x, y)] = member
+            self._map_items[(x, y)] = candidate
         return True
 
     def add_in_rand(self, member, x=None, y=None):
@@ -122,8 +149,10 @@ class ParentMap(object):
             y = my_mod(y, self.y)
 
         if (x, y) in self._map_items:
-            if isinstance(self._map_items[(x, y)], set):
+            if isinstance(self._map_items[(x, y)], Container):
                 self._map_items[(x, y)].remove(candidate)
+                if len(self._map_items[(x, y)]) == 0:
+                    del self._map_items[(x, y)]
             elif self._map_items[(x, y)] is candidate:
                 del self._map_items[(x, y)]
 
@@ -134,7 +163,7 @@ class ParentMap(object):
             y = my_mod(y, self.y)
 
         if x < 0 or x >= self.x:
-            return outside_map
+            return self._outside_map
 
         if y < 0 or y >= self.y:
             return self._outside_map
@@ -143,9 +172,13 @@ class ParentMap(object):
             if isinstance(self._map_items[(x, y)], member):
                 return self._map_items[(x, y)]
             elif isinstance(self._map_items[(x, y)], Container):
-                return self._map_items[(x, y)].return_member(member)
+                return self._map_items[(x, y)].at(member)
         else:
             return None
+
+    def move_candidate(self, x, y, new_x, new_y, candidate):
+        self.remove_candidate(x, y, candidate)
+        self.add_in_pos(candidate, new_x, new_y)
 
     def cycle(self):
         for member, x, y in self.iterate_members():
@@ -170,5 +203,8 @@ class ParentMap(object):
                 amount += 1
         return amount
 
-    def create_representation_snapshot(self):
-        return [[member.represent_itself(), x, y] for (x, y), member in self._map_items.items()]
+    def create_representation_snapshot(self, representation_no):
+        if representation_no == 6:
+            return None
+        else:
+            return [[member.represent_itself(representation_no), x, y] for (x, y), member in self._map_items.items()]

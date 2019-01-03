@@ -1,5 +1,10 @@
 from random import randrange, randint, choice
+
+from PyQt5.QtCore import Qt
+from PyQt5.QtGui import QColor
+
 from mineral import Mineral
+from parent_map import OutsideOfMap
 from representation import *
 
 SHARE_ENERGY          = 1
@@ -152,13 +157,19 @@ class Bot(object):
             return next_cmd - self._size
         return next_cmd
 
-    def create_copy(self, x, y, mutate=False):
+    def create_copy(self, x, y, mutate=None):
+        if mutate is None:
+            if randint(0, 3) == 0:
+                mutate = True
+            else:
+                mutate = False
+
         if self._energy < MAX_ENERGY-55:
             return
 
         for i in range(self._attempts):
             _x, _y = self._find_direction_cell(x=x, y=y, pointer_step=i+1)
-            if self._map.at(_x, _y) in (None, Mineral):
+            if self._map.member_at(_x, _y, Bot) is None:
                 break
         else:
             self.die("Can't create copy")
@@ -210,8 +221,8 @@ class Bot(object):
     def move_with_spin(self, x, y):
         coord_x, coord_y = self._find_direction_cell(x, y)
 
-        if self.energy >= self._move_cost and self._map.at(coord_x, coord_y) in (None, Mineral):
-            self._map.move_bot(x, y, coord_x, coord_y)
+        if self.energy >= self._move_cost and self._map.member_at(coord_x, coord_y, Bot) is None:
+            self._map.move_candidate(x, y, coord_x, coord_y, self)
             self._change_energy(-self._move_cost)
             return True
 
@@ -221,12 +232,13 @@ class Bot(object):
         pass
         n = 0
         for _x, _y in get_cells_around_list:
-            if type(self._map.at(x + _x, y + _y)) is Bot and self._map.at(x + _x, y + _y) is not self._map._outside_map:
+            if isinstance(self._map.member_at(x + _x, y + _y, Bot), Bot):
                 n += 1
         if n == 7:
             self.die("choking")
 
-    def receive_energy(self, sun_rate):
+    def receive_energy(self, x, y):
+        sun_rate = self._map.sun_rate(x, y)
         self._change_energy(sun_rate)
         if sun_rate > 0:
             self._color.increaseGreen(sun_rate)
@@ -234,7 +246,7 @@ class Bot(object):
     def eat_mineral(self, x, y):
         for i in range(self._attempts):
             _x, _y = self._find_direction_cell(x=x, y=y, pointer_step=i+1, cells=get_cells_around_list_plus_self)
-            potential_mineral = self._map.at(_x, _y)
+            potential_mineral = self._map.member_at(_x, _y, Mineral)
             if isinstance(potential_mineral, Mineral):
                 break
         else:
@@ -249,13 +261,13 @@ class Bot(object):
 
         return True
 
-    def look_around(self):
+    def look_around(self, x, y):
         pass
 
     def eat_another_bot(self, x, y):
         for i in range(self._attempts):
             _x, _y = self._find_direction_cell(x=x, y=y, pointer_step=i+1)
-            possible_victim = self._map.at(_x, _y)
+            possible_victim = self._map.member_at(_x, _y, Bot)
             if isinstance(possible_victim, Bot) and not self.is_same_kind(possible_victim):
                 break
         else:
@@ -291,16 +303,13 @@ class Bot(object):
         cmd = self._commands[self._current_command]
 
         if cmd == GET_ENERGY_FROM_SUN:
-            self.receive_energy(self._map.sun_rate(x, y))
+            self.receive_energy(x, y)
         elif cmd == CREATE_COPY:
-            mutate = False
-            if randint(0, 3) == 0:
-                mutate = True
-            self.create_copy(x, y, mutate=mutate)
+            self.create_copy(x, y)
         elif cmd == EAT_MINERAL:
             self.eat_mineral(x, y)
         elif cmd == LOOK_AROUND:
-            self.look_around()
+            self.look_around(x, y)
         elif cmd == MOVE:
             self.move_with_spin(x, y)
         elif cmd == JUMP:
@@ -322,7 +331,7 @@ class Bot(object):
 
         for i in range(self._attempts):
             coord_x, coord_y = self._find_direction_cell(x, y, pointer_step=i+1)
-            possible_mate = self._map.at(coord_x, coord_y)
+            possible_mate = self._map.member_at(coord_x, coord_y, Bot)
             if isinstance(possible_mate, Bot) and self.is_same_kind(possible_mate) and possible_mate._energy < 50:
                 break
         else:
@@ -340,10 +349,10 @@ class Bot(object):
     def jump_with_spin(self, x, y):
         coord_x, coord_y = self._find_direction_cell_jump(x, y)
 
-        if self._energy <= self._move_cost or self._map.at(coord_x, coord_y) is not None:
+        if self._energy <= self._move_cost or type(self._map.member_at(coord_x, coord_y, Bot)) in (OutsideOfMap, Bot):
             return False
 
-        self._map.move_bot(x, y, coord_x, coord_y)
+        self._map.move_candidate(x, y, coord_x, coord_y, self)
         self._change_energy(-self._jump_cost)
         return True
 
@@ -355,8 +364,25 @@ class Bot(object):
                 return False
         return True
 
-    def represent_itself(self):
-        return Cell(self._color.r, self._color.g, self._color.b, self._energy, 'bot')
+    def represent_itself(self, representation_no):
+        if representation_no == PRINT_STYLE_RGB:
+                return QColor(self._color.r, self._color.g, self._color.b, min(self._color.r + self._color.g + self._color.b, 255))
+        elif representation_no == PRINT_STYLE_MAX_COLOR_VALUE:
+                    max_color = max(self._color.r, self._color.g, self._color.b)
+                    if max_color == self._color.r:
+                        return Qt.red
+                    elif max_color == self._color.g:
+                        return Qt.green
+                    elif max_color == self._color.b:
+                        return Qt.blue
+        elif representation_no == PRINT_STYLE_NO_COLOR:
+                return None
+        elif representation_no == PRINT_STYLE_ENERGY:
+                return QColor(255, 255-self.energy, 0, self.energy)
 
-    def repr(self):
-        return self._color
+    #def repr(self):
+    #    return self._color
+
+# TODO 1: Color bot depending on it's group. Set random color on the beginning. Set child the same colour. Modify colour on the mutation with specific rule.
+# TODO 2: Create map and map reader to set minerals and bots on the beginning.
+# TODO 3: Create walls.

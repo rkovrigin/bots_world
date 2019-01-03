@@ -1,3 +1,6 @@
+from PyQt5.QtCore import Qt
+from PyQt5.QtGui import QColor
+
 from representation import *
 
 
@@ -54,5 +57,12 @@ class Mineral(object):
                 self._map.move_mineral(x, y, x, y + 1)
                 # self._map._map_minerals.move(x, y, x, y+1)
 
-    def represent_itself(self):
-        return Cell(0xf4, 72, 0xd0, self._energy, 'mineral')
+    def represent_itself(self, representation_no):
+        if representation_no == PRINT_STYLE_RGB:
+                return Qt.pink
+        elif representation_no == PRINT_STYLE_MAX_COLOR_VALUE:
+                return Qt.cyan
+        elif representation_no == PRINT_STYLE_NO_COLOR:
+                return None
+        elif representation_no == PRINT_STYLE_ENERGY:
+                return QColor(0xf4, 72, 0xd0, self._energy)
