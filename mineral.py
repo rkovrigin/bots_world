@@ -46,8 +46,13 @@ class Mineral(object):
         return bite
 
     def execute_command(self, x, y):
+        if not self.is_alive:
+            self._map.remove_candidate(x, y, self)
+            return
+
         if self.energy <= 0:
             self.die()
+
         return
         # self.energy += 1
         if not self._map._wrapper_y:
@@ -59,10 +64,10 @@ class Mineral(object):
 
     def represent_itself(self, representation_no):
         if representation_no == PRINT_STYLE_RGB:
-                return Qt.pink
+                return QColor(0xf4, 72, 0xd0, 255)
         elif representation_no == PRINT_STYLE_MAX_COLOR_VALUE:
-                return Qt.cyan
+                return QColor(0xf4, 72, 0xd0, 255)
         elif representation_no == PRINT_STYLE_NO_COLOR:
                 return None
         elif representation_no == PRINT_STYLE_ENERGY:
-                return QColor(0xf4, 72, 0xd0, self._energy)
+                return QColor(0xf4, 72, 0xd0, 255)

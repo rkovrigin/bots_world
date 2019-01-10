@@ -28,13 +28,33 @@ class Container(set):
 
     def execute_command(self, x, y):
         for elem in list(self):
+            _map = elem._map
             elem.execute_command(x, y)
+        """
+        if len(self) == 1:
+            candidate = self.pop()
+            _map.remove(x, y)
+            _map.add_in_pos(candidate, x, y)
+        elif len(self) == 0:
+            _map.remove(x, y)
+        """
+
+    def remove_candidate(self, x, y, candidate):
+        self.remove(candidate)
+        if len(self) == 1:
+            leftover_candidate = self.pop()
+            leftover_candidate._map.remove(x, y)
+            leftover_candidate._map.add_in_pos(leftover_candidate, x, y)
+        elif len(self) == 0:
+            raise Exception("Shouldnt be a case ever")
+            del candidate._map_items[(x, y)]
+
 
     @property
     def is_alive(self):
-        for elem in list(self):
-            if not elem.is_alive:
-                self.remove(elem)
+        #for elem in list(self):
+        #    if not elem.is_alive:
+        #        self.remove(elem)
         return len(self) > 0
 
     def represent_itself(self, representation_no):
@@ -84,8 +104,8 @@ class ParentMap(object):
                 self._map_items[(x, y)].add(candidate)
             else:
                 tmp = Container([self._map_items[(x, y)], candidate])
-                assert len(tmp) > 1, "adding same kind on one map field" # can fail on beginning
                 self._map_items[(x, y)] = tmp
+                assert len(tmp) > 1, "adding same kind on one map field" # can fail on beginning
         else:
             self._map_items[(x, y)] = candidate
         return True
@@ -150,9 +170,7 @@ class ParentMap(object):
 
         if (x, y) in self._map_items:
             if isinstance(self._map_items[(x, y)], Container):
-                self._map_items[(x, y)].remove(candidate)
-                if len(self._map_items[(x, y)]) == 0:
-                    del self._map_items[(x, y)]
+                self._map_items[(x, y)].remove_candidate(x, y, candidate)
             elif self._map_items[(x, y)] is candidate:
                 del self._map_items[(x, y)]
 
@@ -173,8 +191,7 @@ class ParentMap(object):
                 return self._map_items[(x, y)]
             elif isinstance(self._map_items[(x, y)], Container):
                 return self._map_items[(x, y)].at(member)
-        else:
-            return None
+        return None
 
     def move_candidate(self, x, y, new_x, new_y, candidate):
         self.remove_candidate(x, y, candidate)
@@ -183,8 +200,8 @@ class ParentMap(object):
     def cycle(self):
         for member, x, y in self.iterate_members():
             member.execute_command(x, y)
-            if not member.is_alive:
-                self.remove(x, y)
+            #if not member.is_alive:
+            #    self.remove(x, y)
 
     #TODO: Save snapshots of actions
     def iterate_members(self, member_kind=None):

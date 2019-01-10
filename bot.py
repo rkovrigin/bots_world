@@ -196,6 +196,7 @@ class Bot(object):
             child._jump_cost = self._jump_cost
             child._day_cost = self._day_cost
             child._copy_cost = self._copy_cost
+        child._color = self._color
 
         return True
 
@@ -287,6 +288,7 @@ class Bot(object):
 
     def execute_command(self, x, y):
         if not self.is_alive:
+            self._map.remove_candidate(x, y, self)
             return
 
         if self.energy <= 0:
