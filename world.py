@@ -3,6 +3,7 @@ from random import randrange
 from threading import Thread, Event
 from time import sleep, time
 
+from Wall import Wall
 from map import Map
 import timing
 from bot import Bot
@@ -30,12 +31,21 @@ class World(Thread):
         self._cycle = 0
         self._init_bot_amount = init_bot_amount
         self._init_mineral_amount = init_mineral_amount
-        self._set_bots_randomly(init_bot_amount)
-        self._set_minerals_randomly(init_mineral_amount)
         self.animate_handle = animate_handle
         self.representation_no = 0
 
         self._run = Event()
+
+        # for i in range(30):
+        #     for j in range(30):
+        #         self._map.add_in_pos(Wall(), i+10, j+10)
+        #
+        # for i in range(28):
+        #     for j in range(28):
+        #         del self._map._map_items[(i+11, j+11)]
+
+        self._set_bots_randomly(init_bot_amount)
+        self._set_minerals_randomly(init_mineral_amount)
 
     def _set_bots_randomly(self, bot_amount):
         for _ in range(bot_amount):

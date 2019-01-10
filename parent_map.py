@@ -1,13 +1,10 @@
 from random import randrange
-
 from timing import timing
 from sun_map import SunMap
+from Wall import Wall
 
 
-class OutsideOfMap(object):
-    pass
-
-outside_map = OutsideOfMap()
+wall = Wall()
 
 
 def my_mod(a, n):
@@ -63,7 +60,7 @@ class Container(set):
 
 
 class ParentMap(object):
-    __slots__ = ["_x", "_y", "_map_items", "_sun_map", "_sun_rate_division", "_wrapper_x", "_wrapper_y", "_outside_map"]
+    __slots__ = ["_x", "_y", "_map_items", "_sun_map", "_sun_rate_division", "_wrapper_x", "_wrapper_y", "_wall"]
 
     def __init__(self, x, y, wrapper_x=True, wrapper_y=True):
         self._x = x
@@ -71,7 +68,7 @@ class ParentMap(object):
         self._map_items = {}
         self._wrapper_x = wrapper_x
         self._wrapper_y = wrapper_y
-        self._outside_map = outside_map
+        self._wall = wall
         self._sun_map = SunMap(x, y, 20, 0)
         self._sun_rate_division = 1
 
@@ -130,7 +127,7 @@ class ParentMap(object):
             y = my_mod(y, self.y)
             new_y = my_mod(new_y, self.y)
 
-        if self.at(new_x, new_y) is outside_map:
+        if self.at(new_x, new_y) is wall:
             return
 
         self._map_items[(new_x, new_y)] = self._map_items[(x, y)]
@@ -152,10 +149,10 @@ class ParentMap(object):
             y = my_mod(y, self.y)
 
         if x < 0 or x >= self.x:
-            return outside_map
+            return wall
 
         if y < 0 or y >= self.y:
-            return self._outside_map
+            return self._wall
 
         if (x, y) in self._map_items:
             return self._map_items[(x, y)]
@@ -181,16 +178,18 @@ class ParentMap(object):
             y = my_mod(y, self.y)
 
         if x < 0 or x >= self.x:
-            return self._outside_map
+            return self._wall
 
         if y < 0 or y >= self.y:
-            return self._outside_map
+            return self._wall
 
         if (x, y) in self._map_items:
             if isinstance(self._map_items[(x, y)], member):
                 return self._map_items[(x, y)]
             elif isinstance(self._map_items[(x, y)], Container):
                 return self._map_items[(x, y)].at(member)
+            elif isinstance(self._map_items[(x, y)], Wall):
+                return self._map_items[(x, y)]
         return None
 
     def move_candidate(self, x, y, new_x, new_y, candidate):

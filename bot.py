@@ -4,7 +4,7 @@ from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QColor
 
 from mineral import Mineral
-from parent_map import OutsideOfMap
+from parent_map import Wall
 from representation import *
 
 SHARE_ENERGY          = 1
@@ -351,7 +351,7 @@ class Bot(object):
     def jump_with_spin(self, x, y):
         coord_x, coord_y = self._find_direction_cell_jump(x, y)
 
-        if self._energy <= self._move_cost or type(self._map.member_at(coord_x, coord_y, Bot)) in (OutsideOfMap, Bot):
+        if self._energy <= self._move_cost or type(self._map.member_at(coord_x, coord_y, Bot)) in (Wall, Bot):
             return False
 
         self._map.move_candidate(x, y, coord_x, coord_y, self)
