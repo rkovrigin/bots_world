@@ -3,6 +3,7 @@ from random import randrange
 from threading import Thread, Event
 from time import sleep, time
 
+from Bacteria import Bacteria
 from Wall import Wall
 from map import Map
 import timing
@@ -26,7 +27,7 @@ seasons = [1, 2, 3, 4, 5, 4, 3, 2, 1]
 class World(Thread):
     def __init__(self, animate_handle, x, y, init_bot_amount=100, init_mineral_amount=100):
         Thread.__init__(self)
-        self._map = ParentMap(x, y, wrapper_x=True, wrapper_y=False)
+        self._map = ParentMap(x, y, wrapper_x=False, wrapper_y=False)
         self._date = 0
         self._cycle = 0
         self._init_bot_amount = init_bot_amount
@@ -49,7 +50,7 @@ class World(Thread):
 
     def _set_bots_randomly(self, bot_amount):
         for _ in range(bot_amount):
-            self._map.add_in_rand(Bot(self._map), y=randrange(0, self._map._y))
+            self._map.add_in_rand(Bacteria(self._map))
 
     def _set_minerals_randomly(self, mineral_amount):
         for _ in range(mineral_amount):
@@ -69,12 +70,12 @@ class World(Thread):
 
             if iteration_no % 100 == 0:
                 end_time = time()
-                print("Iteration %d %f (fields occupied: %d)" % (iteration_no, end_time - start_time, self._map.members_amount()))
+                # print("Iteration %d %f (fields occupied: %d)" % (iteration_no, end_time - start_time, self._map.members_amount()))
                 start_time = time()
                 self._map.set_sun_rate_division(seasons[q % len(seasons)])
                 q += 1
 
-            if self._map.members_amount(Bot) == 0:
+            if self._map.members_amount(Bacteria) == 0:
                 self._set_bots_randomly(self._init_bot_amount)
             if self._map.members_amount(Mineral) < 0:  # self._init_mineral_amount//2:
                 self._set_minerals_randomly(self._init_mineral_amount//2)

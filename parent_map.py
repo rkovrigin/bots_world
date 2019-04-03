@@ -1,6 +1,6 @@
 from random import randrange
 from timing import timing
-from sun_map import SunMap
+from sun_map import SunMap, PoisonMap
 from Wall import Wall
 
 
@@ -60,7 +60,7 @@ class Container(set):
 
 
 class ParentMap(object):
-    __slots__ = ["_x", "_y", "_map_items", "_sun_map", "_sun_rate_division", "_wrapper_x", "_wrapper_y", "_wall"]
+    __slots__ = ["_x", "_y", "_map_items", "_sun_map", "_sun_rate_division", "_wrapper_x", "_wrapper_y", "_wall", "_poison_map"]
 
     def __init__(self, x, y, wrapper_x=True, wrapper_y=True):
         self._x = x
@@ -69,7 +69,8 @@ class ParentMap(object):
         self._wrapper_x = wrapper_x
         self._wrapper_y = wrapper_y
         self._wall = wall
-        self._sun_map = SunMap(x, y, 20, 0)
+        self._sun_map = SunMap(x, y, 20, 20)
+        self._poison_map = PoisonMap(self._x)
         self._sun_rate_division = 1
 
     def sun_rate(self, x, y):
@@ -224,3 +225,6 @@ class ParentMap(object):
             return None
         else:
             return [[member.represent_itself(representation_no), x, y] for (x, y), member in self._map_items.items()]
+
+    def get_poison_level(self, x, y):
+        return self._poison_map._map[x]

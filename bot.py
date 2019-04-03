@@ -281,7 +281,7 @@ class Bot(object):
         possible_victim.die("EATEN BY PREDATOR REASON")
         return True
 
-    def die(self, reason):
+    def die(self, reason=None):
         self._is_alive = False
         self._energy = 0
         # print(reason)

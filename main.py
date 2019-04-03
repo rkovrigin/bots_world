@@ -9,11 +9,11 @@ from world import World
 from queue import Queue
 from threading import Thread
 
-DEFAULT_UNIV_X = 200
-DEFAULT_UNIV_Y = 100
-BOTS_AT_BEGINNING = 2000
-MINERALS_AT_BEGINNING = 1800
-SCALE = 5
+DEFAULT_UNIV_X = 36
+DEFAULT_UNIV_Y = 10
+BOTS_AT_BEGINNING = 50
+MINERALS_AT_BEGINNING = 0
+SCALE = 10
 
 exit_flag = 0
 

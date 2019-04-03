@@ -5,6 +5,7 @@ import random
 import datetime
 import time
 
+from PyQt5 import QtGui
 from PyQt5.QtCore import QPointF, QRect, QRectF, Qt, QTimer, QSize
 from PyQt5.QtGui import QBrush, QColor, QFont, QLinearGradient, QPainter, QPen, QSurfaceFormat, QImage
 from PyQt5.QtWidgets import QApplication, QGridLayout, QLabel, QOpenGLWidget, QWidget
@@ -79,7 +80,11 @@ class GLWidget(QOpenGLWidget):
         if config.DRAWING_STYLE == PRINT_NO_DRAW:
             return
 
-        painter.fillRect(event.rect(), self.background)
+        # gr = QtGui.QLinearGradient(event.rect().left(), event.rect().center(), event.rect().right())
+        # gr.setColorAt(0, Qt.white)
+        # gr.setColorAt(1, Qt.black)
+        # gr.setColorAt(2, Qt.white)
+        painter.fillRect(event.rect(), Qt.white)
 
         if config.DRAWING_STYLE == PRINT_STYLE_NO_COLOR:
             for _, x, y in members:
